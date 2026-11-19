@@ -71,6 +71,25 @@ export default async function Home() {
           </div>
         </section>
 
+        {videoDemo && (
+          <section id="video-demo" className="section">
+            <div className="section-head">
+              <div className="eyebrow">Em movimento</div>
+              <h2 className="section-title">Um pouco do meu trabalho em vídeo</h2>
+            </div>
+            <video
+              className="demo-video"
+              src={videoDemo}
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+              preload="metadata"
+            />
+          </section>
+        )}
+
         <section id="servicos" className="section">
           <div className="section-head">
             <div className="eyebrow">Serviços</div>
