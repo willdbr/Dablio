@@ -4,7 +4,7 @@ import LoginForm from '@/components/LoginForm';
 import { loginCliente } from '@/app/auth-actions';
 import { WHATSAPP_URL } from '@/lib/config';
 
-export const metadata = { title: 'Área do cliente | Dáblio' };
+export const metadata = { title: 'Área do cliente | Dáblio', robots: { index: false, follow: false } };
 
 export default function LoginCliente() {
   return (
