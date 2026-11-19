@@ -105,8 +105,12 @@ export default function DownloadAllButton({ urls }: { urls: string[] }) {
     }
   }
 
-  return <button type="button" className="btn btn-outline" onClick={baixarTudo} disabled={ocupado || urls.length === 0}>
-    {ocupado ? 'Preparando ZIP…' : 'Baixar todas as fotos (.zip)'}
-  </button>;
-  {status && <p className="muted" role="status" style={{ margin: 0 }}>{status}</p>}
+  return (
+    <>
+      <button type="button" className="btn btn-outline" onClick={baixarTudo} disabled={ocupado || urls.length === 0}>
+        {ocupado ? 'Preparando ZIP…' : 'Baixar todas as fotos (.zip)'}
+      </button>
+      {status && <p className="muted" role="status" style={{ margin: 0 }}>{status}</p>}
+    </>
+  );
 }
