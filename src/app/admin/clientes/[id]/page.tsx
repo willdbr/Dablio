@@ -12,7 +12,7 @@ import { atualizarDadosMidiaCliente, excluirCliente, excluirFoto, renovarAcesso 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Cliente | Painel', robots: { index: false } };
 
-export default async function PainelCliente({ params }: { params: { id: string } }) {
+export default async function PainelCliente({ params, searchParams }: { params: { id: string }; searchParams?: { midia?: string } }) {
   const { supabase } = await exigirAdmin();
 
   const { data: cliente } = await supabase
@@ -59,6 +59,11 @@ export default async function PainelCliente({ params }: { params: { id: string }
         <section className="form">
           <h2 className="serif" style={{ fontSize: 28, margin: 0 }}>Serviço e vídeo do cliente</h2>
           <p className="muted" style={{ margin: 0 }}>O link só aparece na área do cliente quando o serviço inclui filmagem.</p>
+          {searchParams?.midia === 'salvo' && (
+            <p role="status" className="notice notice-success" style={{ margin: 0 }}>
+              Dados do serviço e link do vídeo salvos com sucesso!
+            </p>
+          )}
           <form action={atualizarDadosMidiaCliente} className="form">
             <input type="hidden" name="id" value={cliente.id} />
             <div className="field">
