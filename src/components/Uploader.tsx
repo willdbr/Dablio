@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowser } from '@/lib/supabase/browser';
+import { atualizarPortfolio } from '@/app/admin/actions';
 
 // Envia fotos direto do navegador para o Supabase Storage.
 // - Galeria de cliente: bucket "galerias", pasta = id do cliente, registra na tabela photos
@@ -64,6 +65,14 @@ export default function Uploader({
         }
       }
       enviados++;
+    }
+
+    if (bucket === 'portfolio' && enviados > 0) {
+      try {
+        await atualizarPortfolio();
+      } catch {
+        erros.push('As fotos foram enviadas, mas não foi possível atualizar o cache do site.');
+      }
     }
 
     if (input.current) input.current.value = '';
