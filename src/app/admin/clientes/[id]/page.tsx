@@ -1,0 +1,126 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import AdminNav from '@/components/AdminNav';
+import Uploader from '@/components/Uploader';
+import ConfirmButton from '@/components/ConfirmButton';
+import RedefinirSenhaForm from '@/components/RedefinirSenhaForm';
+import { exigirAdmin } from '@/lib/auth';
+import { DIAS_PADRAO } from '@/lib/config';
+import { diasRestantes, fmtData } from '@/lib/format';
+import { excluirCliente, excluirFoto, renovarAcesso } from '../../actions';
+
+export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Cliente | Painel', robots: { index: false } };
+
+export default async function PainelCliente({ params }: { params: { id: string } }) {
+  const { supabase } = await exigirAdmin();
+
+  const { data: cliente } = await supabase
+    .from('clients')
+    .select('id, name, code, expires_at')
+    .eq('id', params.id)
+    .maybeSingle();
+  if (!cliente) notFound();
+
+  const { data: linhas } = await supabase
+    .from('photos')
+    .select('id, path')
+    .eq('client_id', cliente.id)
+    .order('created_at', { ascending: true });
+
+  const caminhos = (linhas ?? []).map((l) => l.path as string);
+  const { data: assinadas } =
+    caminhos.length > 0
+      ? await supabase.storage.from('galerias').createSignedUrls(caminhos, 3600)
+      : { data: [] as { signedUrl: string }[] };
+
+  const dias = diasRestantes(cliente.expires_at);
+  const ativo = dias > 0;
+
+  return (
+    <>
+      <AdminNav />
+      <main className="page stack">
+        <div>
+          <Link href="/admin" className="muted">
+            ← Voltar ao painel
+          </Link>
+          <h1 style={{ marginTop: 16 }}>{cliente.name}</h1>
+          <p className="muted" style={{ margin: 0 }}>
+            Código: <strong style={{ color: 'var(--text)' }}>{String(cliente.code).toUpperCase()}</strong>
+            {' · '}
+            Válido até {fmtData(cliente.expires_at)}{' '}
+            <span className={`badge ${ativo ? 'badge-ok' : 'badge-off'}`}>
+              {ativo ? `${dias} dia(s) restantes` : 'Expirado'}
+            </span>
+          </p>
+        </div>
+
+        <section className="split">
+          <form action={renovarAcesso} className="form">
+            <h2 className="serif" style={{ fontSize: 28, margin: 0 }}>Renovar acesso</h2>
+            <input type="hidden" name="id" value={cliente.id} />
+            <div className="field">
+              <label htmlFor="dias">Novo prazo, a partir de hoje (dias)</label>
+              <input id="dias" name="dias" type="number" min={1} max={730} defaultValue={DIAS_PADRAO} />
+            </div>
+            <div>
+              <button type="submit" className="btn">
+                Renovar
+              </button>
+            </div>
+          </form>
+
+          <div className="form">
+            <h2 className="serif" style={{ fontSize: 28, margin: 0 }}>Senha</h2>
+            <p className="muted" style={{ margin: 0 }}>
+              A senha atual não pode ser exibida. Gere uma nova e envie ao cliente.
+            </p>
+            <RedefinirSenhaForm id={cliente.id} />
+          </div>
+        </section>
+
+        <section className="stack" style={{ gap: 24 }}>
+          <h2 className="serif" style={{ fontSize: 32, margin: 0 }}>Fotos do cliente</h2>
+          <Uploader
+            bucket="galerias"
+            pasta={cliente.id}
+            clienteId={cliente.id}
+            rotulo="Escolha as fotos para este cliente"
+          />
+          {(linhas ?? []).length === 0 ? (
+            <p className="muted">Nenhuma foto enviada ainda.</p>
+          ) : (
+            <div className="gallery">
+              {(linhas ?? []).map((l, i) => (
+                <figure key={l.id}>
+                  <img src={assinadas?.[i]?.signedUrl ?? ''} alt="" loading="lazy" />
+                  <form action={excluirFoto} className="actions">
+                    <input type="hidden" name="id" value={l.id} />
+                    <input type="hidden" name="path" value={l.path} />
+                    <input type="hidden" name="clienteId" value={cliente.id} />
+                    <ConfirmButton mensagem="Excluir esta foto?" className="btn btn-danger">
+                      Excluir
+                    </ConfirmButton>
+                  </form>
+                </figure>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section>
+          <form action={excluirCliente}>
+            <input type="hidden" name="id" value={cliente.id} />
+            <ConfirmButton
+              mensagem="Excluir este cliente, o acesso e TODAS as fotos dele? Não dá para desfazer."
+              className="btn btn-danger"
+            >
+              Excluir cliente e fotos
+            </ConfirmButton>
+          </form>
+        </section>
+      </main>
+    </>
+  );
+}
