@@ -187,6 +187,9 @@ create table if not exists public.testimonials (
   client_name text not null,
   quote text not null,
   visible boolean not null default false,
+  client_id uuid references public.clients(id) on delete set null,
+  consent boolean not null default false,
+  consented_at timestamptz,
   created_at timestamptz not null default now()
 );
 
@@ -206,6 +209,30 @@ create policy "admin gerencia depoimentos" on public.testimonials
 drop policy if exists "depoimentos publicados são públicos" on public.testimonials;
 create policy "depoimentos publicados são públicos" on public.testimonials
   for select using (visible = true);
+
+drop policy if exists "cliente envia depoimento autorizado" on public.testimonials;
+create policy "cliente envia depoimento autorizado" on public.testimonials
+  for insert to authenticated
+  with check (
+    consent = true and visible = false and client_id is not null
+    and exists (
+      select 1 from public.clients c
+      where c.id = testimonials.client_id
+        and c.user_id = auth.uid()
+        and c.expires_at > now()
+    )
+  );
+
+drop policy if exists "cliente consulta próprio depoimento" on public.testimonials;
+create policy "cliente consulta próprio depoimento" on public.testimonials
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.clients c
+      where c.id = testimonials.client_id
+        and c.user_id = auth.uid()
+    )
+  );
 
 grant select on public.site_profile to anon, authenticated;
 grant select on public.testimonials to anon, authenticated;
