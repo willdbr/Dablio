@@ -100,3 +100,38 @@ create policy "depoimentos publicados são públicos" on public.testimonials
 grant select on public.site_profile to anon, authenticated;
 grant select on public.testimonials to anon, authenticated;
 grant insert, update, delete on public.site_profile, public.testimonials to authenticated;
+
+
+-- 5. Depoimentos enviados pelos próprios clientes, com autorização explícita
+alter table public.testimonials
+  add column if not exists client_id uuid references public.clients(id) on delete set null,
+  add column if not exists consent boolean not null default false,
+  add column if not exists consented_at timestamptz;
+
+drop policy if exists "cliente envia depoimento autorizado" on public.testimonials;
+create policy "cliente envia depoimento autorizado" on public.testimonials
+  for insert to authenticated
+  with check (
+    consent = true
+    and visible = false
+    and client_id is not null
+    and exists (
+      select 1 from public.clients c
+      where c.id = testimonials.client_id
+        and c.user_id = auth.uid()
+        and c.expires_at > now()
+    )
+  );
+
+drop policy if exists "cliente consulta próprio depoimento" on public.testimonials;
+create policy "cliente consulta próprio depoimento" on public.testimonials
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.clients c
+      where c.id = testimonials.client_id
+        and c.user_id = auth.uid()
+    )
+  );
+
+grant insert on public.testimonials to authenticated;
