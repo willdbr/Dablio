@@ -26,6 +26,8 @@ export async function criarCliente(
 
   const nome = String(formData.get('nome') ?? '').trim();
   const dias = lerDias(formData.get('dias'));
+  const service = String(formData.get('service') ?? 'Fotografia');
+  if (!['Fotografia', 'Filmagem', 'Fotografia e filmagem'].includes(service)) return { error: 'Selecione um serviço válido.' };
   if (!nome) return { error: 'Informe o nome do cliente.' };
 
   const admin = createAdminClient();
@@ -46,6 +48,7 @@ export async function criarCliente(
     user_id: criado.user.id,
     code: codigo,
     name: nome,
+    service,
     expires_at: expira.toISOString(),
   });
   if (erroCliente) {
