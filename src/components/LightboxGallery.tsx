@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 type Foto = { src: string; alt: string; download?: string };
 
-export default function LightboxGallery({ fotos }: { fotos: Foto[] }) {
+export default function LightboxGallery({ fotos, className = 'masonry' }: { fotos: Foto[]; className?: string }) {
   const [aberta, setAberta] = useState<number | null>(null);
   const atual = aberta === null ? null : fotos[aberta];
 
@@ -17,7 +17,7 @@ export default function LightboxGallery({ fotos }: { fotos: Foto[] }) {
 
   return (
     <>
-      <div className="masonry">
+      <div className={className}>
         {fotos.map((foto, i) => (
           <button key={foto.src} type="button" className="lightbox-thumb" onClick={() => setAberta(i)} aria-label={'Ampliar ' + foto.alt}>
             <img src={foto.src} alt={foto.alt} loading="lazy" />
