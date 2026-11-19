@@ -50,7 +50,7 @@ export default async function AreaCliente() {
         if (baixar.error) erros.push(`download: ${baixar.error.message}`);
 
         fotos = (linhas ?? []).map((l, i) => {
-          const erroIndividual = ver.data?.[i]?.error?.message;
+          const erroIndividual = ver.data?.[i]?.error;
           if (erroIndividual) erros.push(`foto ${i + 1}: ${erroIndividual}`);
           return {
             id: l.id as string,
