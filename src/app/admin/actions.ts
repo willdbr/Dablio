@@ -134,6 +134,41 @@ export async function excluirFoto(formData: FormData) {
   revalidatePath(`/admin/clientes/${clienteId}`);
 }
 
+export async function atualizarDadosMidiaCliente(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const id = String(formData.get('id') ?? '');
+  const service = String(formData.get('service') ?? '');
+  const videoUrl = String(formData.get('video_url') ?? '').trim();
+  const servicosValidos = ['Fotografia', 'Filmagem', 'Fotografia e filmagem'];
+  if (!id || !servicosValidos.includes(service)) return;
+  if (videoUrl) {
+    try {
+      const url = new URL(videoUrl);
+      if (!['https:', 'http:'].includes(url.protocol)) return;
+    } catch {
+      return;
+    }
+  }
+  const { error } = await supabase.from('clients')
+    .update({ service, video_url: videoUrl || null }).eq('id', id);
+  if (error) throw new Error('Não foi possível atualizar os dados de vídeo do cliente.');
+  revalidatePath(`/admin/clientes/${id}`);
+  revalidatePath('/cliente');
+}
+
+export async function excluirVideoDemo() {
+  const { supabase } = await exigirAdmin();
+  await supabase.storage.from('site-demo').remove(['demo.mp4']);
+  revalidatePath('/');
+  revalidatePath('/admin/video-demo');
+}
+
+export async function atualizarVideoDemo() {
+  await exigirAdmin();
+  revalidatePath('/');
+  revalidatePath('/admin/video-demo');
+}
+
 export async function atualizarPortfolio() {
   await exigirAdmin();
   revalidatePath('/');
