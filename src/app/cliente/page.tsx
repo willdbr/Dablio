@@ -25,24 +25,46 @@ export default async function AreaCliente() {
   const expirado = new Date(cliente.expires_at) <= new Date();
 
   let fotos: { id: string; ver: string; baixar: string }[] = [];
+  let erroCarregamento = '';
+
   if (!expirado) {
     // As regras do banco já filtram: só vêm as fotos deste cliente.
-    const { data: linhas } = await supabase
+    const { data: linhas, error: erroConsulta } = await supabase
       .from('photos')
       .select('id, path')
       .order('created_at', { ascending: true });
-    const caminhos = (linhas ?? []).map((l) => l.path as string);
 
-    if (caminhos.length > 0) {
-      const [ver, baixar] = await Promise.all([
-        supabase.storage.from('galerias').createSignedUrls(caminhos, 3600),
-        supabase.storage.from('galerias').createSignedUrls(caminhos, 3600, { download: true }),
-      ]);
-      fotos = (linhas ?? []).map((l, i) => ({
-        id: l.id as string,
-        ver: ver.data?.[i]?.signedUrl ?? '',
-        baixar: baixar.data?.[i]?.signedUrl ?? '',
-      }));
+    if (erroConsulta) {
+      erroCarregamento = `Erro ao consultar fotos: ${erroConsulta.message}`;
+    } else {
+      const caminhos = (linhas ?? []).map((l) => l.path as string);
+
+      if (caminhos.length > 0) {
+        const [ver, baixar] = await Promise.all([
+          supabase.storage.from('galerias').createSignedUrls(caminhos, 3600),
+          supabase.storage.from('galerias').createSignedUrls(caminhos, 3600, { download: true }),
+        ]);
+
+        const erros: string[] = [];
+        if (ver.error) erros.push(`visualização: ${ver.error.message}`);
+        if (baixar.error) erros.push(`download: ${baixar.error.message}`);
+
+        fotos = (linhas ?? []).map((l, i) => {
+          const erroIndividual = ver.data?.[i]?.error?.message;
+          if (erroIndividual) erros.push(`foto ${i + 1}: ${erroIndividual}`);
+          return {
+            id: l.id as string,
+            ver: ver.data?.[i]?.signedUrl ?? '',
+            baixar: baixar.data?.[i]?.signedUrl ?? '',
+          };
+        });
+
+        if (erros.length > 0) {
+          erroCarregamento = erros.join(' | ');
+        } else if (fotos.some((foto) => !foto.ver)) {
+          erroCarregamento = 'O Storage não retornou uma URL de visualização para uma ou mais fotos.';
+        }
+      }
     }
   }
 
@@ -69,6 +91,12 @@ export default async function AreaCliente() {
             </p>
           )}
         </div>
+
+        {erroCarregamento && (
+          <p role="alert" className="muted">
+            Diagnóstico das fotos: {erroCarregamento}
+          </p>
+        )}
 
         {expirado ? (
           <div>
