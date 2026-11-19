@@ -147,7 +147,7 @@ export async function atualizarDadosMidiaCliente(formData: FormData) {
   if (videoUrl) {
     try {
       const url = new URL(videoUrl);
-      if (!['https:', 'http:'].includes(url.protocol)) return;
+      if (url.protocol !== 'https:') return;
     } catch {
       return;
     }
