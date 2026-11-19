@@ -50,7 +50,8 @@ export default async function AreaCliente() {
         if (baixar.error) console.error('Erro ao gerar URLs de download:', baixar.error);
 
         fotos = (linhas ?? []).map((l, i) => {
-          if (ver.data?.[i]?.error) console.error(`Erro ao gerar URL da foto ${i + 1}:`, ver.data[i].error);
+          const erroIndividual = ver.data?.[i]?.error;
+          if (erroIndividual) console.error(`Erro ao gerar URL da foto ${i + 1}:`, erroIndividual);
           return {
             id: l.id as string,
             ver: ver.data?.[i]?.signedUrl ?? '',
