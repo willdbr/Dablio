@@ -20,7 +20,8 @@ async function comprimirImagem(original: File): Promise<File> {
     bitmap.close();
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.82));
     if (!blob || blob.size >= original.size) return original;
-    return new File([blob], original.name.replace(/\\.[^.]+$/, '') + '.webp', { type: 'image/webp', lastModified: Date.now() });
+    const baseName = original.name.includes('.') ? original.name.slice(0, original.name.lastIndexOf('.')) : original.name;
+    return new File([blob], baseName + '.webp', { type: 'image/webp', lastModified: Date.now() });
   } catch {
     return original;
   }
