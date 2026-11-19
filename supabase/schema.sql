@@ -193,6 +193,9 @@ create table if not exists public.testimonials (
   created_at timestamptz not null default now()
 );
 
+create unique index if not exists testimonials_one_per_client_idx
+  on public.testimonials(client_id) where client_id is not null;
+
 alter table public.site_profile enable row level security;
 alter table public.testimonials enable row level security;
 
