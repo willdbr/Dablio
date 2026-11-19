@@ -25,7 +25,7 @@ export default async function AreaCliente() {
   const expirado = new Date(cliente.expires_at) <= new Date();
 
   let fotos: { id: string; ver: string; baixar: string }[] = [];
-  let erroCarregamento = '';
+  let houveErroCarregamento = false;
 
   if (!expirado) {
     // As regras do banco já filtram: só vêm as fotos deste cliente.
@@ -35,7 +35,8 @@ export default async function AreaCliente() {
       .order('created_at', { ascending: true });
 
     if (erroConsulta) {
-      erroCarregamento = `Erro ao consultar fotos: ${erroConsulta.message}`;
+      console.error('Erro ao consultar fotos do cliente:', erroConsulta);
+      houveErroCarregamento = true;
     } else {
       const caminhos = (linhas ?? []).map((l) => l.path as string);
 
@@ -45,13 +46,11 @@ export default async function AreaCliente() {
           supabase.storage.from('galerias').createSignedUrls(caminhos, 3600, { download: true }),
         ]);
 
-        const erros: string[] = [];
-        if (ver.error) erros.push(`visualização: ${ver.error.message}`);
-        if (baixar.error) erros.push(`download: ${baixar.error.message}`);
+        if (ver.error) console.error('Erro ao gerar URLs de visualização:', ver.error);
+        if (baixar.error) console.error('Erro ao gerar URLs de download:', baixar.error);
 
         fotos = (linhas ?? []).map((l, i) => {
-          const erroIndividual = ver.data?.[i]?.error;
-          if (erroIndividual) erros.push(`foto ${i + 1}: ${erroIndividual}`);
+          if (ver.data?.[i]?.error) console.error(`Erro ao gerar URL da foto ${i + 1}:`, ver.data[i].error);
           return {
             id: l.id as string,
             ver: ver.data?.[i]?.signedUrl ?? '',
@@ -59,11 +58,7 @@ export default async function AreaCliente() {
           };
         });
 
-        if (erros.length > 0) {
-          erroCarregamento = erros.join(' | ');
-        } else if (fotos.some((foto) => !foto.ver)) {
-          erroCarregamento = 'O Storage não retornou uma URL de visualização para uma ou mais fotos.';
-        }
+        if (fotos.some((foto) => !foto.ver)) houveErroCarregamento = true;
       }
     }
   }
@@ -92,9 +87,9 @@ export default async function AreaCliente() {
           )}
         </div>
 
-        {erroCarregamento && (
+        {houveErroCarregamento && (
           <p role="alert" className="muted">
-            Diagnóstico das fotos: {erroCarregamento}
+            Não foi possível carregar algumas fotos agora. Tente atualizar a página ou entre em contato pelo WhatsApp.
           </p>
         )}
 
