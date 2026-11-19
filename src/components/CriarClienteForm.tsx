@@ -26,6 +26,14 @@ export default function CriarClienteForm() {
           <input id="nome" name="nome" type="text" required maxLength={120} />
         </div>
         <div className="field">
+          <label htmlFor="service">Serviço contratado</label>
+          <select id="service" name="service" defaultValue="Fotografia">
+            <option>Fotografia</option>
+            <option>Filmagem</option>
+            <option>Fotografia e filmagem</option>
+          </select>
+        </div>
+        <div className="field">
           <label htmlFor="dias">Validade do acesso (dias)</label>
           <input id="dias" name="dias" type="number" min={1} max={730} defaultValue={DIAS_PADRAO} />
         </div>
