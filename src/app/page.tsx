@@ -64,6 +64,8 @@ export default async function Home() {
         <nav className="nav" aria-label="Principal">
           <a href="#portfolio">Portfólio</a>
           <a href="#servicos">Serviços</a>
+          {conteudo.perfil?.about_text && <a href="#sobre">Sobre</a>}
+          {conteudo.depoimentos.length > 0 && <a href="#depoimentos">Depoimentos</a>
           <a href="#contato">Contato</a>
           <Link href="/cliente/login" className="nav-pill">
             Área do cliente
