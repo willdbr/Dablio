@@ -12,21 +12,51 @@ export default async function AreaCliente() {
   const supabase = createClient();
   const {
     data: { user },
+    error: erroUsuario,
   } = await supabase.auth.getUser();
-  if (!user) redirect('/cliente/login');
 
-  const { data: cliente } = await supabase
+  if (!user) {
+    return (
+      <main className="page stack">
+        <h1>Diagnóstico da área do cliente</h1>
+        <p>O servidor não conseguiu recuperar uma sessão autenticada.</p>
+        <p>Erro: {erroUsuario?.message ?? 'Nenhum usuário retornado pelo Supabase Auth.'}</p>
+      </main>
+    );
+  }
+
+  const { data: cliente, error: erroCliente } = await supabase
     .from('clients')
     .select('id, name, expires_at')
     .eq('user_id', user.id)
     .maybeSingle();
-  if (!cliente) redirect('/cliente/login');
+
+  if (erroCliente) {
+    return (
+      <main className="page stack">
+        <h1>Diagnóstico da área do cliente</h1>
+        <p>Sessão autenticada, mas houve erro ao consultar o cadastro.</p>
+        <p>Código: {erroCliente.code ?? 'não informado'}</p>
+        <p>Mensagem: {erroCliente.message}</p>
+        <p>Usuário autenticado: {user.id}</p>
+      </main>
+    );
+  }
+
+  if (!cliente) {
+    return (
+      <main className="page stack">
+        <h1>Diagnóstico da área do cliente</h1>
+        <p>A sessão está válida, mas nenhum cadastro foi encontrado para este usuário.</p>
+        <p>Usuário autenticado: {user.id}</p>
+      </main>
+    );
+  }
 
   const expirado = new Date(cliente.expires_at) <= new Date();
 
   let fotos: { id: string; ver: string; baixar: string }[] = [];
   if (!expirado) {
-    // As regras do banco já filtram: só vêm as fotos deste cliente.
     const { data: linhas } = await supabase
       .from('photos')
       .select('id, path')
