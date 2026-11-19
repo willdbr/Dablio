@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import Logo from '@/components/Logo';
+import LightboxGallery from '@/components/LightboxGallery';
 import { createClient } from '@/lib/supabase/server';
 import { sair } from '@/app/auth-actions';
 import { diasRestantes, fmtData } from '@/lib/format';
@@ -122,20 +123,7 @@ export default async function AreaCliente() {
         ) : fotos.length === 0 ? (
           <p className="muted">Suas fotos ainda estão sendo preparadas. Volte em breve.</p>
         ) : (
-          <div className="gallery">
-            {fotos.map((f, i) => (
-              <figure key={f.id}>
-                <a href={f.ver} target="_blank" rel="noopener noreferrer">
-                  <img src={f.ver} alt={`Foto ${i + 1}`} loading="lazy" />
-                </a>
-                <div className="actions">
-                  <a href={f.baixar} className="btn btn-outline btn-small">
-                    Baixar
-                  </a>
-                </div>
-              </figure>
-            ))}
-          </div>
+          <LightboxGallery fotos={fotos.map((f, i) => ({ src: f.ver, alt: `Foto ${i + 1}`, download: f.baixar }))} />
         )}
       </main>
     </>
