@@ -96,7 +96,7 @@ export default function DownloadAllButton({ urls }: { urls: string[] }) {
       link.href = url;
       link.download = 'galeria-dablio.zip';
       link.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
       setStatus('Download da galeria iniciado.');
     } catch (erro) {
       setStatus(erro instanceof Error ? erro.message : 'Falha ao preparar o ZIP.');
@@ -107,6 +107,6 @@ export default function DownloadAllButton({ urls }: { urls: string[] }) {
 
   return <button type="button" className="btn btn-outline" onClick={baixarTudo} disabled={ocupado || urls.length === 0}>
     {ocupado ? 'Preparando ZIP…' : 'Baixar todas as fotos (.zip)'}
-    {status && <span className="sr-only" role="status">{status}</span>}
   </button>;
+  {status && <p className="muted" role="status" style={{ margin: 0 }}>{status}</p>}
 }
