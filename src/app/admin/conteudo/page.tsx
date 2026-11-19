@@ -1,7 +1,8 @@
 import AdminNav from '@/components/AdminNav';
 import ConfirmButton from '@/components/ConfirmButton';
 import { exigirAdmin } from '@/lib/auth';
-import { criarDepoimento, excluirDepoimento, salvarApresentacao } from '../actions';
+import { atualizarStatusDepoimento, criarDepoimento, excluirDepoimento, salvarApresentacao } from '../actions';
+import { fmtDataHora } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Conteúdo do site | Painel', robots: { index: false } };
@@ -10,7 +11,7 @@ export default async function PainelConteudo() {
   const { supabase } = await exigirAdmin();
   const [{ data: perfil }, { data: depoimentos }] = await Promise.all([
     supabase.from('site_profile').select('about_title, about_text').eq('id', 1).maybeSingle(),
-    supabase.from('testimonials').select('id, client_name, quote, visible').order('created_at', { ascending: false }),
+    supabase.from('testimonials').select('id, client_name, quote, visible, consent, consented_at, created_at').order('created_at', { ascending: false }),
   ]);
 
   return (
@@ -44,7 +45,8 @@ export default async function PainelConteudo() {
             <label htmlFor="quote">Depoimento</label>
             <textarea id="quote" name="quote" required rows={4} maxLength={1000} />
           </div>
-          <label className="inline-check"><input type="checkbox" name="visible" /> Publicar no site (tenha autorização do cliente)</label>
+          <label className="inline-check"><input type="checkbox" name="consent" required /> Confirmo que tenho autorização do cliente para publicar este depoimento.</label>
+          <label className="inline-check"><input type="checkbox" name="visible" /> Publicar no site após cadastrar</label>
           <button className="btn" type="submit">Cadastrar depoimento</button>
         </form>
 
@@ -54,8 +56,20 @@ export default async function PainelConteudo() {
             <div className="stack">
               {(depoimentos ?? []).map((d) => (
                 <article key={d.id} className="form">
-                  <strong>{d.client_name} · {d.visible ? 'Publicado' : 'Rascunho'}</strong>
+                  <strong>{d.client_name} · {d.visible ? 'Publicado' : 'Aguardando aprovação'}</strong>
                   <p style={{ margin: 0 }}>{d.quote}</p>
+                  <p className="muted" style={{ margin: 0 }}>
+                    Autorização: {d.consent ? 'registrada' : 'não registrada'}{d.consented_at ? ' · ' + fmtDataHora(d.consented_at) : ''}
+                  </p>
+                  {d.consent && (
+                    <form action={atualizarStatusDepoimento}>
+                      <input type="hidden" name="id" value={d.id} />
+                      <input type="hidden" name="visible" value={d.visible ? 'false' : 'true'} />
+                      <button type="submit" className="btn btn-outline">
+                        {d.visible ? 'Retirar do site' : 'Aprovar e publicar'}
+                      </button>
+                    </form>
+                  )}
                   <form action={excluirDepoimento}>
                     <input type="hidden" name="id" value={d.id} />
                     <ConfirmButton mensagem="Excluir este depoimento?" className="btn btn-danger">Excluir</ConfirmButton>
