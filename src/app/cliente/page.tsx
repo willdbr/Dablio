@@ -6,7 +6,7 @@ import { diasRestantes, fmtData } from '@/lib/format';
 import { WHATSAPP_URL } from '@/lib/config';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Minhas fotos | Dáblio' };
+export const metadata = { title: 'Minhas fotos | Dáblio', robots: { index: false, follow: false } };
 
 export default async function AreaCliente() {
   const supabase = createClient();
