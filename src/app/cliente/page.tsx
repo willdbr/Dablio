@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import Logo from '@/components/Logo';
 import LightboxGallery from '@/components/LightboxGallery';
+import DownloadAllButton from '@/components/DownloadAllButton';
 import { createClient } from '@/lib/supabase/server';
 import { sair } from '@/app/auth-actions';
 import { diasRestantes, fmtData } from '@/lib/format';
@@ -123,7 +124,10 @@ export default async function AreaCliente() {
         ) : fotos.length === 0 ? (
           <p className="muted">Suas fotos ainda estão sendo preparadas. Volte em breve.</p>
         ) : (
-          <LightboxGallery fotos={fotos.map((f, i) => ({ src: f.ver, alt: `Foto ${i + 1}`, download: f.baixar }))} />
+          <div className="stack" style={{ gap: 16 }}>
+            <DownloadAllButton urls={fotos.map((f) => f.baixar).filter(Boolean)} />
+            <LightboxGallery fotos={fotos.filter((f) => f.ver).map((f, i) => ({ src: f.ver, alt: `Foto ${i + 1}`, download: f.baixar }))} />
+          </div>
         )}
       </main>
     </>
