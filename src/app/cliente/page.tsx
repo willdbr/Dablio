@@ -17,12 +17,14 @@ export default async function AreaCliente() {
 
   const { data: cliente } = await supabase
     .from('clients')
-    .select('id, name, expires_at')
+    .select('id, name, expires_at, service, video_url')
     .eq('user_id', user.id)
     .maybeSingle();
   if (!cliente) redirect('/cliente/login');
 
   const expirado = new Date(cliente.expires_at) <= new Date();
+  const diasAteExpirar = diasRestantes(cliente.expires_at);
+  const incluiVideo = ['Filmagem', 'Fotografia e filmagem'].includes(cliente.service ?? '') && Boolean(cliente.video_url);
 
   let fotos: { id: string; ver: string; baixar: string }[] = [];
   let houveErroCarregamento = false;
@@ -87,6 +89,23 @@ export default async function AreaCliente() {
             </p>
           )}
         </div>
+
+        {!expirado && diasAteExpirar > 0 && diasAteExpirar <= 7 && (
+          <p className="error" role="status">
+            Atenção: seu acesso expira em {diasAteExpirar} dia(s), no dia {fmtData(cliente.expires_at)}.
+            Baixe suas fotos antes do vencimento.
+          </p>
+        )}
+
+        {incluiVideo && !expirado && (
+          <section className="form">
+            <h2 className="serif" style={{ fontSize: 32, margin: 0 }}>Seu vídeo</h2>
+            <p className="muted" style={{ margin: 0 }}>Seu vídeo está hospedado em uma plataforma externa.</p>
+            <a className="btn" href={cliente.video_url!} target="_blank" rel="noopener noreferrer">
+              Assistir ao vídeo
+            </a>
+          </section>
+        )}
 
         {houveErroCarregamento && (
           <p role="alert" className="muted">
