@@ -119,6 +119,9 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
         {searchParams?.depoimento === 'autorizacao' && (
           <p className="error" role="alert">Para enviar o depoimento, é necessário marcar a autorização de publicação.</p>
         )}
+        {searchParams?.depoimento === 'erro' && (
+          <p className="error" role="alert">Não foi possível enviar seu depoimento agora. Tente novamente mais tarde.</p>
+        )}
         {houveErroCarregamento && (
           <p role="alert" className="muted">
             Não foi possível carregar algumas fotos agora. Tente atualizar a página ou entre em contato pelo WhatsApp.
