@@ -5,7 +5,27 @@ import { useRouter } from 'next/navigation';
 import { createBrowser } from '@/lib/supabase/browser';
 import { atualizarPortfolio } from '@/app/admin/actions';
 
-// Envia fotos direto do navegador para o Supabase Storage.
+// Envia somente fotos direto do navegador para o Supabase Storage.
+async function comprimirImagem(original: File): Promise<File> {
+  if (!original.type.startsWith('image/') || ['image/gif', 'image/svg+xml'].includes(original.type)) return original;
+  try {
+    const bitmap = await createImageBitmap(original);
+    const escala = Math.min(1, 2400 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * escala));
+    canvas.height = Math.max(1, Math.round(bitmap.height * escala));
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return original;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.82));
+    if (!blob || blob.size >= original.size) return original;
+    return new File([blob], original.name.replace(/\\.[^.]+$/, '') + '.webp', { type: 'image/webp', lastModified: Date.now() });
+  } catch {
+    return original;
+  }
+}
+
 // - Galeria de cliente: bucket "galerias", pasta = id do cliente, registra na tabela photos
 // - Portfólio do site: bucket "portfolio", sem pasta e sem registro
 export default function Uploader({
@@ -38,8 +58,13 @@ export default function Uploader({
     let enviados = 0;
 
     for (let i = 0; i < arquivos.length; i++) {
-      const arquivo = arquivos[i];
-      setStatus(`Enviando ${i + 1} de ${arquivos.length}…`);
+      const original = arquivos[i];
+      if (!original.type.startsWith('image/')) {
+        erros.push(original.name + ': envie somente imagens.');
+        continue;
+      }
+      setStatus('Preparando ' + (i + 1) + ' de ' + arquivos.length + '…');
+      const arquivo = await comprimirImagem(original);
 
       const nomeSeguro = arquivo.name
         .normalize('NFD')
@@ -88,7 +113,7 @@ export default function Uploader({
   return (
     <form onSubmit={enviar} className="upload">
       <label htmlFor={`up-${bucket}`}>{rotulo}</label>
-      <input id={`up-${bucket}`} ref={input} type="file" accept="image/*,video/mp4" multiple />
+      <input id={`up-${bucket}`} ref={input} type="file" accept="image/*" multiple />
       <button type="submit" className="btn" disabled={ocupado}>
         {ocupado ? 'Enviando…' : 'Enviar'}
       </button>
