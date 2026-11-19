@@ -122,6 +122,33 @@ export default async function Home() {
           </div>
         </section>
 
+        {conteudo.perfil?.about_text && (
+          <section id="sobre" className="section">
+            <div className="section-head">
+              <div className="eyebrow">Quem está por trás da câmera</div>
+              <h2 className="section-title">{conteudo.perfil.about_title}</h2>
+            </div>
+            <p className="about-text">{conteudo.perfil.about_text}</p>
+          </section>
+        )}
+
+        {conteudo.depoimentos.length > 0 && (
+          <section id="depoimentos" className="section">
+            <div className="section-head">
+              <div className="eyebrow">Experiências</div>
+              <h2 className="section-title">O que dizem os clientes</h2>
+            </div>
+            <div className="cards">
+              {conteudo.depoimentos.map((d) => (
+                <blockquote className="testimonial" key={d.id}>
+                  <p>“{d.quote}”</p>
+                  <cite>{d.client_name}</cite>
+                </blockquote>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section id="portfolio" className="section">
           <div className="section-head">
             <div className="eyebrow">Portfólio</div>
