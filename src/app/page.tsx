@@ -25,8 +25,36 @@ async function carregarPortfolio(): Promise<string[]> {
   }
 }
 
+async function carregarVideoDemo(): Promise<string | null> {
+  try {
+    const sb = createPublicClient();
+    const { data } = await sb.storage.from('site-demo').list('');
+    if (!(data ?? []).some((f) => f.name === 'demo.mp4')) return null;
+    return sb.storage.from('site-demo').getPublicUrl('demo.mp4').data.publicUrl;
+  } catch {
+    return null;
+  }
+}
+
+async function carregarConteudo() {
+  try {
+    const sb = createPublicClient();
+    const [{ data: perfil }, { data: depoimentos }] = await Promise.all([
+      sb.from('site_profile').select('about_title, about_text').eq('id', 1).maybeSingle(),
+      sb.from('testimonials').select('id, client_name, quote').eq('visible', true).order('created_at', { ascending: false }).limit(12),
+    ]);
+    return { perfil, depoimentos: depoimentos ?? [] };
+  } catch {
+    return { perfil: null, depoimentos: [] };
+  }
+}
+
 export default async function Home() {
-  const fotos = await carregarPortfolio();
+  const [fotos, videoDemo, conteudo] = await Promise.all([
+    carregarPortfolio(),
+    carregarVideoDemo(),
+    carregarConteudo(),
+  ]);
   const destaque = fotos[0];
 
   return (
