@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const ehLogin = path === '/cliente/login' || path === '/admin/login';
 
-  if (!user && !ehLogin) {
+  // Temporário para diagnóstico: deixa /cliente chegar à página, que exibirá o motivo do redirecionamento.\n  if (!user && !ehLogin && !path.startsWith('/cliente')) {
     const url = request.nextUrl.clone();
     url.pathname = path.startsWith('/admin') ? '/admin/login' : '/cliente/login';
     return NextResponse.redirect(url);
