@@ -6,11 +6,12 @@ import { createClient } from '@/lib/supabase/server';
 import { sair } from '@/app/auth-actions';
 import { diasRestantes, fmtData } from '@/lib/format';
 import { WHATSAPP_URL } from '@/lib/config';
+import { enviarDepoimento } from './actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Minhas fotos | Dáblio', robots: { index: false, follow: false } };
 
-export default async function AreaCliente() {
+export default async function AreaCliente({ searchParams }: { searchParams?: { depoimento?: string } }) {
   const supabase = createClient();
   const {
     data: { user },
@@ -27,6 +28,9 @@ export default async function AreaCliente() {
   const expirado = new Date(cliente.expires_at) <= new Date();
   const diasAteExpirar = diasRestantes(cliente.expires_at);
   const incluiVideo = ['Filmagem', 'Fotografia e filmagem'].includes(cliente.service ?? '') && Boolean(cliente.video_url);
+  const { data: depoimento } = await supabase.from('testimonials')
+    .select('id, visible').eq('client_id', cliente.id)
+    .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
   let fotos: { id: string; ver: string; baixar: string }[] = [];
   let houveErroCarregamento = false;
@@ -109,10 +113,46 @@ export default async function AreaCliente() {
           </section>
         )}
 
+        {searchParams?.depoimento === 'enviado' && (
+          <p className="credenciais" role="status">Depoimento enviado. Obrigado! Ele ficará aguardando sua aprovação antes de aparecer no site.</p>
+        )}
+        {searchParams?.depoimento === 'autorizacao' && (
+          <p className="error" role="alert">Para enviar o depoimento, é necessário marcar a autorização de publicação.</p>
+        )}
         {houveErroCarregamento && (
           <p role="alert" className="muted">
             Não foi possível carregar algumas fotos agora. Tente atualizar a página ou entre em contato pelo WhatsApp.
           </p>
+        )}
+
+        {!expirado && (
+          <section className="form">
+            <h2 className="serif" style={{ fontSize: 30, margin: 0 }}>Deixe seu depoimento</h2>
+            {depoimento ? (
+              <p className="muted" style={{ margin: 0 }}>
+                {depoimento.visible
+                  ? 'Seu depoimento já foi publicado no site. Obrigado por compartilhar sua experiência!'
+                  : 'Recebemos seu depoimento. Ele está aguardando aprovação e não será publicado antes disso.'}
+              </p>
+            ) : (
+              <>
+                <p className="muted" style={{ margin: 0 }}>
+                  Conte como foi sua experiência com a Dáblio. Seu texto só será exibido publicamente depois de aprovado no painel.
+                </p>
+                <form action={enviarDepoimento} className="form">
+                  <div className="field">
+                    <label htmlFor="testimonial_quote">Seu depoimento</label>
+                    <textarea id="testimonial_quote" name="quote" required rows={4} maxLength={1000} placeholder="Escreva aqui como foi sua experiência..." />
+                  </div>
+                  <label className="inline-check">
+                    <input type="checkbox" name="consent" required />
+                    Autorizo a publicação deste depoimento no site da Dáblio, após aprovação.
+                  </label>
+                  <button type="submit" className="btn">Enviar depoimento</button>
+                </form>
+              </>
+            )}
+          </section>
         )}
 
         {expirado ? (
