@@ -108,6 +108,9 @@ alter table public.testimonials
   add column if not exists consent boolean not null default false,
   add column if not exists consented_at timestamptz;
 
+create unique index if not exists testimonials_one_per_client_idx
+  on public.testimonials(client_id) where client_id is not null;
+
 drop policy if exists "cliente envia depoimento autorizado" on public.testimonials;
 create policy "cliente envia depoimento autorizado" on public.testimonials
   for insert to authenticated
