@@ -30,14 +30,33 @@ export async function loginAdmin(_prev: LoginState, formData: FormData): Promise
   const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
   if (error || !data.user) return { error: 'E-mail ou senha incorretos.' };
 
-  const { data: admin } = await supabase
+  // Diagnóstico temporário: confirma a sessão recuperada pelo servidor.
+  const { data: sessao, error: erroSessao } = await supabase.auth.getUser();
+  if (erroSessao || !sessao.user) {
+    return {
+      error: `Diagnóstico: login aceito, mas a sessão não foi recuperada no servidor. ${erroSessao?.message ?? 'Usuário da sessão ausente.'}`,
+    };
+  }
+
+  if (sessao.user.id !== data.user.id) {
+    return { error: 'Diagnóstico: o ID da sessão não corresponde ao usuário autenticado no login.' };
+  }
+
+  const { data: admin, error: erroAdmin } = await supabase
     .from('admins')
     .select('user_id')
-    .eq('user_id', data.user.id)
+    .eq('user_id', sessao.user.id)
     .maybeSingle();
+
+  if (erroAdmin) {
+    return {
+      error: `Diagnóstico: sessão válida, mas a consulta à tabela admins falhou (${erroAdmin.code ?? 'sem código'}): ${erroAdmin.message}`,
+    };
+  }
+
   if (!admin) {
     await supabase.auth.signOut();
-    return { error: 'Esta conta não tem acesso ao painel.' };
+    return { error: 'Diagnóstico: sessão válida e consulta executada, mas nenhum registro correspondente foi encontrado em admins.' };
   }
 
   redirect('/admin');
