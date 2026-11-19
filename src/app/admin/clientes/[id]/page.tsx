@@ -7,7 +7,7 @@ import RedefinirSenhaForm from '@/components/RedefinirSenhaForm';
 import { exigirAdmin } from '@/lib/auth';
 import { DIAS_PADRAO } from '@/lib/config';
 import { diasRestantes, fmtData } from '@/lib/format';
-import { excluirCliente, excluirFoto, renovarAcesso } from '../../actions';
+import { atualizarDadosMidiaCliente, excluirCliente, excluirFoto, renovarAcesso } from '../../actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Cliente | Painel', robots: { index: false } };
@@ -17,7 +17,7 @@ export default async function PainelCliente({ params }: { params: { id: string }
 
   const { data: cliente } = await supabase
     .from('clients')
-    .select('id, name, code, expires_at')
+    .select('id, name, code, expires_at, service, video_url')
     .eq('id', params.id)
     .maybeSingle();
   if (!cliente) notFound();
@@ -55,6 +55,27 @@ export default async function PainelCliente({ params }: { params: { id: string }
             </span>
           </p>
         </div>
+
+        <section className="form">
+          <h2 className="serif" style={{ fontSize: 28, margin: 0 }}>Serviço e vídeo do cliente</h2>
+          <p className="muted" style={{ margin: 0 }}>O link só aparece na área do cliente quando o serviço inclui filmagem.</p>
+          <form action={atualizarDadosMidiaCliente} className="form">
+            <input type="hidden" name="id" value={cliente.id} />
+            <div className="field">
+              <label htmlFor="service">Serviço contratado</label>
+              <select id="service" name="service" defaultValue={cliente.service ?? 'Fotografia'}>
+                <option>Fotografia</option>
+                <option>Filmagem</option>
+                <option>Fotografia e filmagem</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="video_url">Link externo do vídeo (YouTube, Vimeo, Drive etc.)</label>
+              <input id="video_url" name="video_url" type="url" defaultValue={cliente.video_url ?? ''} placeholder="https://..." />
+            </div>
+            <button type="submit" className="btn">Salvar dados de vídeo</button>
+          </form>
+        </section>
 
         <section className="split">
           <form action={renovarAcesso} className="form">
