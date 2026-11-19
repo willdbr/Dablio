@@ -60,7 +60,7 @@ export default async function PainelCliente({ params, searchParams }: { params: 
           <h2 className="serif" style={{ fontSize: 28, margin: 0 }}>Serviço e vídeo do cliente</h2>
           <p className="muted" style={{ margin: 0 }}>O link só aparece na área do cliente quando o serviço inclui filmagem.</p>
           {searchParams?.midia === 'salvo' && (
-            <p role="status" className="notice notice-success" style={{ margin: 0 }}>
+            <p role="status" style={{ margin: 0, padding: "12px 16px", borderRadius: 8, border: "1px solid #86b98d", background: "#edf8ef", color: "#205b2b" }}>
               Dados do serviço e link do vídeo salvos com sucesso!
             </p>
           )}
