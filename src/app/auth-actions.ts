@@ -30,16 +30,12 @@ export async function loginAdmin(_prev: LoginState, formData: FormData): Promise
   const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
   if (error || !data.user) return { error: 'E-mail ou senha incorretos.' };
 
-  // Diagnóstico temporário: confirma a sessão recuperada pelo servidor.
+  // Confirma a sessão e verifica se a conta tem acesso ao painel.
   const { data: sessao, error: erroSessao } = await supabase.auth.getUser();
-  if (erroSessao || !sessao.user) {
-    return {
-      error: `Diagnóstico: login aceito, mas a sessão não foi recuperada no servidor. ${erroSessao?.message ?? 'Usuário da sessão ausente.'}`,
-    };
-  }
-
-  if (sessao.user.id !== data.user.id) {
-    return { error: 'Diagnóstico: o ID da sessão não corresponde ao usuário autenticado no login.' };
+  if (erroSessao || !sessao.user || sessao.user.id !== data.user.id) {
+    console.error('Não foi possível confirmar a sessão do administrador:', erroSessao);
+    await supabase.auth.signOut();
+    return { error: 'Não foi possível concluir o login. Tente novamente.' };
   }
 
   const { data: admin, error: erroAdmin } = await supabase
@@ -49,14 +45,14 @@ export async function loginAdmin(_prev: LoginState, formData: FormData): Promise
     .maybeSingle();
 
   if (erroAdmin) {
-    return {
-      error: `Diagnóstico: sessão válida, mas a consulta à tabela admins falhou (${erroAdmin.code ?? 'sem código'}): ${erroAdmin.message}`,
-    };
+    console.error('Erro ao verificar acesso de administrador:', erroAdmin);
+    await supabase.auth.signOut();
+    return { error: 'Não foi possível verificar o acesso ao painel. Tente novamente.' };
   }
 
   if (!admin) {
     await supabase.auth.signOut();
-    return { error: 'Diagnóstico: sessão válida e consulta executada, mas nenhum registro correspondente foi encontrado em admins.' };
+    return { error: 'Esta conta não tem acesso ao painel.' };
   }
 
   redirect('/admin');
