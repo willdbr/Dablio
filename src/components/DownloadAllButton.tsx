@@ -11,6 +11,12 @@ function crc32(bytes: Uint8Array) {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
+function comoBlobPart(bytes: Uint8Array): BlobPart {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return buffer;
+}
+
 function juntar(partes: BlobPart[]) {
   return new Blob(partes, { type: 'application/zip' });
 }
@@ -87,9 +93,9 @@ export default function DownloadAllButton({ urls }: { urls: string[] }) {
 
       const partes: BlobPart[] = [];
       for (let i = 0; i < locais.length; i++) {
-        partes.push(centrais[i], locais[i].bytes);
+        partes.push(comoBlobPart(centrais[i]), comoBlobPart(locais[i].bytes));
       }
-      partes.push(...centralBytes, fim);
+      partes.push(...centralBytes.map(comoBlobPart), comoBlobPart(fim));
       const arquivo = juntar(partes);
       const url = URL.createObjectURL(arquivo);
       const link = document.createElement('a');
