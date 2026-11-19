@@ -8,7 +8,7 @@ Site público + área do cliente com login (código e senha, validade de 90 dias
 
 - **Site público:** home, serviços (fotografia e filmagem), portfólio com as fotos que você enviar, contato (formulário, WhatsApp e Instagram).
 - **Área do cliente (`/cliente/login`):** o cliente entra com código e senha, vê e baixa só as próprias fotos. Depois que o prazo vence, o acesso é bloqueado pelo próprio banco de dados (não dá para burlar pelo navegador).
-- **Painel (`/admin`):** você cria o acesso do cliente (código e senha são gerados automaticamente), sobe as fotos, renova o prazo, gera nova senha, exclui cliente, gerencia o portfólio, vídeo demonstrativo, apresentação, depoimentos e mensagens do formulário.
+- **Painel (`/admin`):** você cria o acesso do cliente (código e senha são gerados automaticamente), sobe as fotos, renova o prazo, gera nova senha, exclui cliente, gerencia o portfólio, vídeo demonstrativo, apresentação, depoimentos e mensagens do formulário. Depoimentos enviados pelos clientes ficam pendentes até sua aprovação.
 
 ## Passo a passo para colocar no ar
 
@@ -41,7 +41,7 @@ Abra http://localhost:3000. Painel: http://localhost:3000/admin/login.
 ## Como usar no dia a dia
 
 1. Cliente contratou: entre em `/admin/login`, crie o cliente em **Novo cliente** e copie o código e a senha que aparecem (a senha só aparece nessa hora).
-2. Abra o cliente na lista, confira o serviço contratado e envie somente fotos. Se o serviço incluir filmagem, cadastre o link externo do vídeo nessa mesma tela.
+2. Abra o cliente na lista, confira o serviço contratado e envie somente fotos. Se o serviço incluir filmagem, cadastre o link externo do vídeo nessa mesma tela. O cliente também poderá enviar um depoimento com autorização explícita; ele só aparece no site depois que você aprovar em **Conteúdo do site**.
 3. Mande o código e a senha pelo WhatsApp, junto do link `seusite.com.br/cliente/login`.
 4. Passados os 90 dias o acesso fecha sozinho. Se o cliente pedir de novo, use **Renovar acesso**.
 
