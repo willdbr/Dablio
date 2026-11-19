@@ -157,6 +157,7 @@ export async function atualizarDadosMidiaCliente(formData: FormData) {
   if (error) throw new Error('Não foi possível atualizar os dados de vídeo do cliente.');
   revalidatePath(`/admin/clientes/${id}`);
   revalidatePath('/cliente');
+  redirect(`/admin/clientes/${id}?midia=salvo`);
 }
 
 export async function salvarApresentacao(formData: FormData) {
