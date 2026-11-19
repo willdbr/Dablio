@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import ContactForm from '@/components/ContactForm';
+import LightboxGallery from '@/components/LightboxGallery';
 import { createPublicClient } from '@/lib/supabase/public';
 import { INSTAGRAM_URL, WHATSAPP_URL } from '@/lib/config';
 
@@ -126,15 +127,15 @@ export default async function Home() {
             <div className="eyebrow">Portfólio</div>
             <h2 className="section-title">Trabalhos recentes</h2>
           </div>
-          <div className="masonry">
-            {fotos.length > 0
-              ? fotos.map((src, i) => <img key={src} src={src} alt={`Foto ${i + 1} do portfólio`} loading="lazy" />)
-              : ALTURAS.map((h, i) => (
-                  <div key={i} className="placeholder" style={{ height: h }}>
-                    Foto {i + 1}
-                  </div>
-                ))}
-          </div>
+          {fotos.length > 0 ? (
+            <LightboxGallery fotos={fotos.map((src, i) => ({ src, alt: `Foto ${i + 1} do portfólio` }))} />
+          ) : (
+            <div className="masonry">
+              {ALTURAS.map((h, i) => (
+                <div key={i} className="placeholder" style={{ height: h }}>Foto {i + 1}</div>
+              ))}
+            </div>
+          )}
         </section>
 
         <section id="cliente" className="client-section">
