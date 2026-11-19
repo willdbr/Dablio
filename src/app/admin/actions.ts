@@ -159,6 +159,34 @@ export async function atualizarDadosMidiaCliente(formData: FormData) {
   revalidatePath('/cliente');
 }
 
+export async function salvarApresentacao(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const titulo = String(formData.get('about_title') ?? '').trim().slice(0, 100);
+  const texto = String(formData.get('about_text') ?? '').trim().slice(0, 3000);
+  await supabase.from('site_profile').upsert({ id: 1, about_title: titulo || 'Sobre mim', about_text: texto });
+  revalidatePath('/');
+  revalidatePath('/admin/conteudo');
+}
+
+export async function criarDepoimento(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const nome = String(formData.get('client_name') ?? '').trim().slice(0, 100);
+  const quote = String(formData.get('quote') ?? '').trim().slice(0, 1000);
+  const visible = formData.get('visible') === 'on';
+  if (!nome || !quote) return;
+  await supabase.from('testimonials').insert({ client_name: nome, quote, visible });
+  revalidatePath('/');
+  revalidatePath('/admin/conteudo');
+}
+
+export async function excluirDepoimento(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const id = String(formData.get('id') ?? '');
+  await supabase.from('testimonials').delete().eq('id', id);
+  revalidatePath('/');
+  revalidatePath('/admin/conteudo');
+}
+
 export async function excluirVideoDemo() {
   const { supabase } = await exigirAdmin();
   await supabase.storage.from('site-demo').remove(['demo.mp4']);
