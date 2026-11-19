@@ -9,23 +9,29 @@ export const revalidate = 60;
 
 const ALTURAS = [440, 300, 380, 320, 460, 280];
 
-async function carregarPortfolio(): Promise<string[]> {
+async function carregarPortfolio(): Promise<{ fotos: string[]; erro: string }> {
   try {
     const sb = createPublicClient();
-    const { data } = await sb.storage
+    const { data, error } = await sb.storage
       .from('portfolio')
       .list('', { limit: 60, sortBy: { column: 'created_at', order: 'desc' } });
 
-    return (data ?? [])
-      .filter((f) => f.id && !f.name.startsWith('.'))
-      .map((f) => sb.storage.from('portfolio').getPublicUrl(f.name).data.publicUrl);
-  } catch {
-    return [];
+    if (error) return { fotos: [], erro: `Erro ao listar portfolio: ${error.message} (código: ${error.name ?? 'sem código'})` };
+
+    return {
+      fotos: (data ?? [])
+        .filter((f) => f.id && !f.name.startsWith('.'))
+        .map((f) => sb.storage.from('portfolio').getPublicUrl(f.name).data.publicUrl),
+      erro: '',
+    };
+  } catch (error) {
+    return { fotos: [], erro: error instanceof Error ? error.message : String(error) };
   }
 }
 
 export default async function Home() {
-  const fotos = await carregarPortfolio();
+  const resultadoPortfolio = await carregarPortfolio();
+  const fotos = resultadoPortfolio.fotos;
   const destaque = fotos[0];
 
   return (
@@ -107,6 +113,11 @@ export default async function Home() {
             <div className="eyebrow">Portfólio</div>
             <h2 className="section-title">Trabalhos recentes</h2>
           </div>
+          {resultadoPortfolio.erro && (
+            <p role="alert" className="muted">
+              Diagnóstico do portfólio: {resultadoPortfolio.erro}
+            </p>
+          )}
           <div className="masonry">
             {fotos.length > 0
               ? fotos.map((src, i) => <img key={src} src={src} alt={`Foto ${i + 1} do portfólio`} loading="lazy" />)
