@@ -173,8 +173,23 @@ export async function criarDepoimento(formData: FormData) {
   const nome = String(formData.get('client_name') ?? '').trim().slice(0, 100);
   const quote = String(formData.get('quote') ?? '').trim().slice(0, 1000);
   const visible = formData.get('visible') === 'on';
-  if (!nome || !quote) return;
-  await supabase.from('testimonials').insert({ client_name: nome, quote, visible });
+  const consent = formData.get('consent') === 'on';
+  if (!nome || !quote || !consent) return;
+  await supabase.from('testimonials').insert({
+    client_name: nome, quote, visible, consent: true, consented_at: new Date().toISOString(),
+  });
+  revalidatePath('/');
+  revalidatePath('/admin/conteudo');
+}
+
+export async function atualizarStatusDepoimento(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const id = String(formData.get('id') ?? '');
+  const visible = formData.get('visible') === 'true';
+  if (!id) return;
+  const { error } = await supabase.from('testimonials')
+    .update({ visible }).eq('id', id).eq('consent', true);
+  if (error) throw new Error('Não foi possível atualizar a publicação do depoimento.');
   revalidatePath('/');
   revalidatePath('/admin/conteudo');
 }
