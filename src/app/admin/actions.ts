@@ -134,6 +134,12 @@ export async function excluirFoto(formData: FormData) {
   revalidatePath(`/admin/clientes/${clienteId}`);
 }
 
+export async function atualizarPortfolio() {
+  await exigirAdmin();
+  revalidatePath('/');
+  revalidatePath('/admin/portfolio');
+}
+
 export async function excluirPortfolio(formData: FormData) {
   const { supabase } = await exigirAdmin();
   const nome = String(formData.get('nome') ?? '');
