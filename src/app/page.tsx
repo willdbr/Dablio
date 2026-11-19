@@ -186,7 +186,7 @@ export default async function Home() {
 
       <footer className="footer">
         <span>© {new Date().getFullYear()} Dáblio. Todos os direitos reservados.</span>
-        <span>Fotografia · Filmagem</span>
+        <span><Link href="/privacidade">Privacidade</Link> · Fotografia · Filmagem</span>
       </footer>
     </>
   );
