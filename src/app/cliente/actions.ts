@@ -9,7 +9,7 @@ export async function enviarDepoimento(formData: FormData) {
   const consent = formData.get('consent') === 'on';
   if (!quote || !consent) redirect('/cliente?depoimento=autorizacao');
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/cliente/login');
 
@@ -43,7 +43,7 @@ export async function enviarDepoimento(formData: FormData) {
 export async function alternarFavorito(formData: FormData) {
   const photoId = String(formData.get('photo_id') ?? '');
   if (!photoId) return;
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/cliente/login');
 
