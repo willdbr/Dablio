@@ -22,7 +22,8 @@ export async function enviarMensagem(_prev: ContatoState, formData: FormData): P
   }
 
   const cabecalhos = headers();
-  const ip = (cabecalhos.get('x-forwarded-for') ?? cabecalhos.get('x-real-ip') ?? 'unknown').split(',')[0].trim();
+  const encaminhado = cabecalhos.get('x-forwarded-for');
+  const ip = (cabecalhos.get('x-real-ip') ?? (encaminhado ? encaminhado.split(',').at(-1)?.trim() : null) ?? 'unknown').slice(0, 100);
   const ipHash = createHash('sha256').update(ip).digest('hex');
   const admin = createAdminClient();
   const { data: permitido, error: erroLimite } = await admin.rpc('allow_contact_submission', { p_ip_hash: ipHash });
