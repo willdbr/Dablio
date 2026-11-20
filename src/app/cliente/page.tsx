@@ -46,6 +46,8 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
       console.error('Erro ao consultar fotos do cliente:', erroConsulta);
       houveErroCarregamento = true;
     } else {
+      const { data: favoritosAtuais } = await supabase.from('photo_favorites').select('photo_id').eq('client_id', cliente.id);
+      const favoritosSet = new Set((favoritosAtuais ?? []).map((f) => f.photo_id));
       const caminhos = (linhas ?? []).map((l) => l.path as string);
 
       if (caminhos.length > 0) {
@@ -63,7 +65,8 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
           return {
             id: l.id as string,
             ver: ver.data?.[i]?.signedUrl ?? '',
-            baixar: baixar.data?.[i]?.signedUrl ?? '',\n            favorita: favoritosSet.has(l.id),
+            baixar: baixar.data?.[i]?.signedUrl ?? '',
+            favorita: favoritosSet.has(l.id),
           };
         });
 
