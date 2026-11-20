@@ -9,14 +9,16 @@ const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', curren
 const hojeBrasil = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 export default async function Financeiro() {
  const {supabase}=await exigirAdmin();
- const [{data:clientes},{data:pagamentos}]=await Promise.all([
-  supabase.from('clients').select('id,name,contract_value').order('name'),
+ const [{data:clientes},{data:contratos},{data:pagamentos}]=await Promise.all([
+  supabase.from('clients').select('id,name').order('name'),
+  supabase.from('client_contracts').select('client_id,contract_value'),
   supabase.from('finance_payments').select('id,client_id,amount,payment_method,paid_at,notes').order('paid_at',{ascending:false})
  ]);
  const lista=clientes??[], pagos=pagamentos??[];
- const contratado=lista.reduce((s,c)=>s+Number(c.contract_value??0),0);
+ const valores=new Map<string,number>((contratos??[]).map(c=>[c.client_id,Number(c.contract_value)] as [string,number]));
+ const contratado=lista.reduce((s,c)=>s+(valores.get(c.id)??0),0);
  const recebido=pagos.reduce((s,p)=>s+Number(p.amount),0);
- const aberto=lista.reduce((s,c)=>s+Math.max(0,Number(c.contract_value??0)-pagos.filter(p=>p.client_id===c.id).reduce((a,p)=>a+Number(p.amount),0)),0);
+ const aberto=lista.reduce((s,c)=>s+Math.max(0,(valores.get(c.id)??0)-pagos.filter(p=>p.client_id===c.id).reduce((a,p)=>a+Number(p.amount),0)),0);
  return <><AdminNav/><main className="page stack">
  <div><Link href="/admin" className="muted">← Voltar ao painel</Link><h1 style={{marginTop:16}}>Financeiro</h1><p className="muted" style={{margin:0}}>Controle manual dos contratos e pagamentos recebidos fora do site.</p></div>
  <section className="summary-grid"><article className="summary-card"><span className="muted">Valor contratado</span><strong>{brl(contratado)}</strong></article><article className="summary-card"><span className="muted">Total recebido</span><strong>{brl(recebido)}</strong></article><article className="summary-card"><span className="muted">Saldo em aberto</span><strong>{brl(aberto)}</strong></article></section>
