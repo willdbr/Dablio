@@ -1,8 +1,16 @@
 -- DÁBLIO | Fases 2 e 3: financeiro manual e agenda
 -- Execute no Supabase SQL Editor. Seguro para reexecução.
 
-alter table public.clients
-  add column if not exists contract_value numeric(12,2) not null default 0;
+create table if not exists public.client_contracts (
+  client_id uuid primary key references public.clients(id) on delete cascade,
+  contract_value numeric(12,2) not null default 0 check (contract_value >= 0),
+  updated_at timestamptz not null default now()
+);
+alter table public.client_contracts enable row level security;
+drop policy if exists "admin gerencia contratos" on public.client_contracts;
+create policy "admin gerencia contratos" on public.client_contracts
+  for all to authenticated using (public.is_admin()) with check (public.is_admin());
+grant select, insert, update, delete on public.client_contracts to authenticated;
 
 create table if not exists public.finance_payments (
   id uuid primary key default gen_random_uuid(),
