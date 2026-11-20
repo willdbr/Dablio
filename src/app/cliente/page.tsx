@@ -13,7 +13,7 @@ export const metadata = { title: 'Minhas fotos | Dáblio', robots: { index: fals
 
 export default async function AreaCliente({ searchParams }: { searchParams?: Promise<{ depoimento?: string; favorito?: string }> }) {
   const query = await searchParams;
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
