@@ -235,3 +235,27 @@ supabase/
 ---
 
 Desenvolvido para **Dáblio — Fotografia e Filmagem**.
+
+
+## Segurança e manutenção
+
+### Uploads e Storage
+- As galerias dos clientes ficam no bucket privado `galerias`.
+- O portfólio e o vídeo demonstrativo são públicos por finalidade; não armazene material privado nesses buckets.
+- Os uploads de imagem aceitam JPG, PNG e WebP. O limite é 15 MB por arquivo.
+- O vídeo demonstrativo aceita MP4 até 50 MB.
+- Execute `supabase/migrations/20261120_storage_hardening.sql` no Supabase SQL Editor para aplicar os limites também no servidor.
+- `supabase/auditoria_seguranca.sql` contém consultas somente leitura para revisar RLS, políticas, permissões e buckets.
+
+### Variáveis de ambiente
+- Nunca versionar `.env`, `.env.local` ou valores reais de chaves.
+- `SUPABASE_SERVICE_ROLE_KEY` deve existir somente nas variáveis de ambiente do servidor na Vercel. Nunca use prefixo `NEXT_PUBLIC_` nessa chave.
+- O arquivo `.env.example` contém apenas nomes de variáveis, sem credenciais.
+
+### Backups
+- Configure backups automáticos do banco no plano do Supabase e confirme a retenção disponível no painel.
+- Para recuperação de desastre, mantenha uma cópia independente dos arquivos do Storage; backup do banco não substitui backup das fotos e vídeos.
+- Teste a restauração periodicamente. Um backup que nunca foi restaurado ainda não foi validado.
+
+### Dependências
+- A aplicação ainda usa Next.js 14.2.x. Planejar migração controlada para uma versão suportada e corrigida, validando build, autenticação, Server Actions, upload e área do cliente antes da publicação.
