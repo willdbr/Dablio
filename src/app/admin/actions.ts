@@ -278,7 +278,7 @@ export async function registrarPagamento(formData: FormData) {
   const paidAt = String(formData.get('paid_at') ?? '');
   const notes = String(formData.get('notes') ?? '').trim().slice(0, 250);
   const methods = ['Pix', 'Dinheiro', 'Cartão', 'Transferência', 'Outro'];
-  if (!clientId || !Number.isFinite(amount) || amount <= 0 || amount > 100000000 || !methods.includes(method) || !/^\\d{4}-\\d{2}-\\d{2}$/.test(paidAt)) return;
+  if (!clientId || !Number.isFinite(amount) || amount <= 0 || amount > 100000000 || !methods.includes(method) || !/^\d{4}-\d{2}-\d{2}$/.test(paidAt)) return;
   const { error } = await supabase.from('finance_payments').insert({
     client_id: clientId, amount, payment_method: method, paid_at: paidAt, notes: notes || null,
   });
@@ -307,7 +307,7 @@ export async function criarAgendamento(formData: FormData) {
   const service = String(formData.get('service') ?? '');
   const notes = String(formData.get('notes') ?? '').trim().slice(0, 1000);
   const validServices = ['Fotografia', 'Filmagem', 'Fotografia e filmagem', 'Reunião'];
-  if (!clientId || !title || !location || !validServices.includes(service) || !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(startsRaw)) return;
+  if (!clientId || !title || !location || !validServices.includes(service) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(startsRaw)) return;
   const startsAt = new Date(startsRaw + '-03:00');
   if (Number.isNaN(startsAt.getTime())) return;
   const { error } = await supabase.from('appointments').insert({
