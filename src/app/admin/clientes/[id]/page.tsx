@@ -7,7 +7,7 @@ import RedefinirSenhaForm from '@/components/RedefinirSenhaForm';
 import { exigirAdmin } from '@/lib/auth';
 import { DIAS_PADRAO } from '@/lib/config';
 import { diasRestantes, fmtData } from '@/lib/format';
-import { atualizarDadosMidiaCliente, excluirCliente, excluirFoto, renovarAcesso } from '../../actions';
+import { atualizarDadosMidiaCliente, atualizarStatusEntrega, excluirCliente, excluirFoto, renovarAcesso } from '../../actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Cliente | Painel', robots: { index: false } };
@@ -17,7 +17,7 @@ export default async function PainelCliente({ params, searchParams }: { params: 
 
   const { data: cliente } = await supabase
     .from('clients')
-    .select('id, name, code, expires_at, service, video_url')
+    .select('id, name, code, expires_at, service, video_url, delivery_status')
     .eq('id', params.id)
     .maybeSingle();
   if (!cliente) notFound();
@@ -33,6 +33,9 @@ export default async function PainelCliente({ params, searchParams }: { params: 
     caminhos.length > 0
       ? await supabase.storage.from('galerias').createSignedUrls(caminhos, 3600)
       : { data: [] as { signedUrl: string }[] };
+
+  const { data: favoritos } = await supabase.from('photo_favorites').select('photo_id').eq('client_id', cliente.id);
+  const favoritosIds = new Set((favoritos ?? []).map((f) => f.photo_id));
 
   const dias = diasRestantes(cliente.expires_at);
   const ativo = dias > 0;
@@ -82,6 +85,26 @@ export default async function PainelCliente({ params, searchParams }: { params: 
           </form>
         </section>
 
+
+        <section className="form">
+          <h2 className="serif" style={{ fontSize: 28, margin: 0 }}>Acompanhamento da entrega</h2>
+          <p className="muted" style={{ margin: 0 }}>O cliente poderá acompanhar esta etapa na área reservada.</p>
+          <form action={atualizarStatusEntrega} className="form">
+            <input type="hidden" name="id" value={cliente.id} />
+            <div className="field">
+              <label htmlFor="delivery_status">Etapa atual</label>
+              <select id="delivery_status" name="delivery_status" defaultValue={cliente.delivery_status ?? 'recebido'}>
+                <option value="recebido">Ensaio recebido</option>
+                <option value="em_edicao">Em edição</option>
+                <option value="aguardando_aprovacao">Aguardando aprovação</option>
+                <option value="finalizado">Finalizado</option>
+                <option value="entregue">Entregue</option>
+              </select>
+            </div>
+            <button type="submit" className="btn">Atualizar etapa</button>
+          </form>
+        </section>
+
         <section className="split">
           <form action={renovarAcesso} className="form">
             <h2 className="serif" style={{ fontSize: 28, margin: 0 }}>Renovar acesso</h2>
@@ -108,6 +131,7 @@ export default async function PainelCliente({ params, searchParams }: { params: 
 
         <section className="stack" style={{ gap: 24 }}>
           <h2 className="serif" style={{ fontSize: 32, margin: 0 }}>Fotos do cliente</h2>
+          <p className="muted" style={{ margin: 0 }}>Fotos favoritas selecionadas pelo cliente: <strong style={{ color: 'var(--text)' }}>{favoritosIds.size}</strong></p>
           <Uploader
             bucket="galerias"
             pasta={cliente.id}
