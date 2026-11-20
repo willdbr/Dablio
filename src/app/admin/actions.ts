@@ -27,6 +27,7 @@ export async function criarCliente(
   const nome = String(formData.get('nome') ?? '').trim();
   const dias = lerDias(formData.get('dias'));
   const service = String(formData.get('service') ?? 'Fotografia');
+  const deliveryStatus = String(formData.get('delivery_status') ?? 'recebido');
   if (!['Fotografia', 'Filmagem', 'Fotografia e filmagem'].includes(service)) return { error: 'Selecione um serviço válido.' };
   if (!nome) return { error: 'Informe o nome do cliente.' };
 
@@ -239,4 +240,18 @@ export async function excluirMensagem(formData: FormData) {
   await supabase.from('messages').delete().eq('id', id);
 
   revalidatePath('/admin');
+}
+
+
+export async function atualizarStatusEntrega(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const id = String(formData.get('id') ?? '');
+  const status = String(formData.get('delivery_status') ?? '');
+  const validos = ['recebido', 'em_edicao', 'aguardando_aprovacao', 'finalizado', 'entregue'];
+  if (!id || !validos.includes(status)) return;
+  const { error } = await supabase.from('clients').update({ delivery_status: status }).eq('id', id);
+  if (error) throw new Error('Não foi possível atualizar o status da entrega.');
+  revalidatePath(`/admin/clientes/${id}`);
+  revalidatePath('/admin');
+  revalidatePath('/cliente');
 }
