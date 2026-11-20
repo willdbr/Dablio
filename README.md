@@ -14,6 +14,18 @@ O projeto utiliza **Next.js 14**, **React 18** e **Supabase**. A publicação é
 - Formulário de contato, além de links para WhatsApp e Instagram.
 - Páginas e recursos de SEO.
 
+### Financeiro manual
+- Defina o valor total do contrato de cada cliente.
+- Registre pagamentos parciais ou integrais feitos por Pix, dinheiro, cartão, transferência ou outro meio.
+- Consulte o histórico por cliente, total recebido e saldo em aberto.
+- O site não processa cobranças nem recebe dados de cartão.
+
+### Agenda
+- Cadastre ensaios e compromissos vinculados a clientes.
+- Informe título, data, horário, serviço, local e observações.
+- Atualize o status para agendado, concluído ou cancelado.
+- Clientes com acesso válido visualizam os próximos compromissos na área reservada.
+
 ### Área do cliente
 - Login com código e senha fornecidos pelo administrador.
 - Galeria privada com acesso somente às próprias fotos.
@@ -148,6 +160,15 @@ O schema configura os buckets:
 As políticas de Row Level Security (RLS) e Storage restringem o acesso às galerias. Um cliente autenticado só pode consultar as próprias fotos enquanto o acesso estiver dentro da validade. Administradores gerenciam os conteúdos pelo painel.
 
 > **Importante:** não remova nem flexibilize as políticas RLS para resolver erros sem antes identificar a permissão ou política responsável.
+
+### Atualização do banco — financeiro e agenda
+Depois do deploy do código, abra o **Supabase > SQL Editor** e execute o arquivo:
+
+```
+supabase/migrations/20261120_finance_agenda.sql
+```
+
+A migração adiciona o valor do contrato, a tabela de pagamentos e a agenda com políticas RLS. Não apague nem substitua as políticas existentes.
 
 ## Publicação na Vercel
 
