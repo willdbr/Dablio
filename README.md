@@ -258,4 +258,4 @@ Desenvolvido para **Dáblio — Fotografia e Filmagem**.
 - Teste a restauração periodicamente. Um backup que nunca foi restaurado ainda não foi validado.
 
 ### Dependências
-- A aplicação ainda usa Next.js 14.2.x. Planejar migração controlada para uma versão suportada e corrigida, validando build, autenticação, Server Actions, upload e área do cliente antes da publicação.
+- O projeto foi atualizado para Next.js 15.5.29 (Maintenance LTS), mantendo React 18 para reduzir o impacto da migração. A linha 15 recebe correções críticas de segurança até 31/01/2027; planejar migração para Next.js 16 antes desse prazo, incluindo adaptação das APIs assíncronas de cookies/headers e validação completa.
