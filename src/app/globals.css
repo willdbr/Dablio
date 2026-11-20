@@ -174,3 +174,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .client-appointment-section { padding: 22px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-soft); }
 .appointment-client { display: flex; flex-direction: column; gap: 6px; padding: 16px 0; border-top: 1px solid var(--line); }
 .appointment-client strong { color: var(--accent); font-size: 18px; }
+
+.admin-shortcuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.admin-shortcut { display: flex; flex-direction: column; gap: 6px; padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-soft); transition: border-color .2s, transform .2s; }
+.admin-shortcut:hover { border-color: var(--accent); transform: translateY(-2px); }
+.admin-shortcut strong { font-size: 18px; }
