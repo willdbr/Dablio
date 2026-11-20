@@ -51,23 +51,41 @@ export async function alternarFavorito(formData: FormData) {
     .select('id, expires_at').eq('user_id', user.id).maybeSingle();
   if (!cliente || new Date(cliente.expires_at) <= new Date()) redirect('/cliente');
 
-  const { data: foto } = await supabase.from('photos')
+  const { data: foto, error: erroFoto } = await supabase.from('photos')
     .select('id').eq('id', photoId).maybeSingle();
-  if (!foto) redirect('/cliente');
+  if (erroFoto) {
+    console.error('Erro ao validar foto para favorito:', erroFoto);
+    redirect('/cliente?favorito=erro_foto');
+  }
+  if (!foto) redirect('/cliente?favorito=foto_nao_encontrada');
 
-  const { data: existente } = await supabase.from('photo_favorites')
+  const { data: existente, error: erroConsulta } = await supabase.from('photo_favorites')
     .select('photo_id').eq('photo_id', photoId).eq('client_id', cliente.id).maybeSingle();
+  if (erroConsulta) {
+    console.error('Erro ao consultar favorito:', erroConsulta);
+    redirect('/cliente?favorito=erro_consulta');
+  }
 
+  let resultado: 'adicionado' | 'removido';
   if (existente) {
     const { error } = await supabase.from('photo_favorites')
       .delete().eq('photo_id', photoId).eq('client_id', cliente.id);
-    if (error) throw new Error('Não foi possível remover a foto dos favoritos.');
+    if (error) {
+      console.error('Erro ao remover favorito:', error);
+      redirect('/cliente?favorito=erro_gravacao');
+    }
+    resultado = 'removido';
   } else {
     const { error } = await supabase.from('photo_favorites').insert({
       photo_id: photoId, client_id: cliente.id, user_id: user.id,
     });
-    if (error) throw new Error('Não foi possível adicionar a foto aos favoritos.');
+    if (error) {
+      console.error('Erro ao adicionar favorito:', error);
+      redirect('/cliente?favorito=erro_gravacao');
+    }
+    resultado = 'adicionado';
   }
   revalidatePath('/cliente');
   revalidatePath(`/admin/clientes/${cliente.id}`);
+  redirect(`/cliente?favorito=${resultado}`);
 }
