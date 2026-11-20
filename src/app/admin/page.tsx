@@ -57,6 +57,7 @@ export default async function Painel() {
         <section className="admin-shortcuts">
           <Link href="/admin/financeiro" className="admin-shortcut"><strong>Financeiro</strong><span className="muted">Contratos, pagamentos e saldos →</span></Link>
           <Link href="/admin/agenda" className="admin-shortcut"><strong>Agenda de ensaios</strong><span className="muted">Datas, horários e locais →</span></Link>
+          <Link href="/admin/notificacoes" className="admin-shortcut"><strong>Notificações</strong><span className="muted">Contatos, depoimentos e entregas →</span></Link>
         </section>
 
         <section className="stack" style={{ gap: 16 }}>
