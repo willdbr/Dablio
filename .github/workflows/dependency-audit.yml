@@ -1,0 +1,54 @@
+name: Dependency security audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/dependency-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Synchronize lockfile
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Run npm audit
+        shell: bash
+        run: |
+          npm audit --json > npm-audit-report.json || true
+          node -e "const r=require('./npm-audit-report.json'); console.log(JSON.stringify({metadata:r.metadata?.vulnerabilities, advisories:Object.entries(r.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,range:v.range,fixAvailable:v.fixAvailable,via:v.via.map(x=>typeof x==='string'?x:{title:x.title,url:x.url,range:x.range})}))},null,2))"
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dablio-npm-audit
+          path: npm-audit-report.json
+          retention-days: 7
+
+      - name: Commit synchronized lockfile
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "chore: synchronize npm lockfile for Next.js 15"
+            git push
+          else
+            echo "package-lock.json is already synchronized."
+          fi
