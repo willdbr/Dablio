@@ -111,7 +111,8 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
             <strong style={{ color: 'var(--accent)' }}>{({ recebido: 'Ensaio recebido', em_edicao: 'Em edição', aguardando_aprovacao: 'Aguardando sua aprovação', finalizado: 'Finalizado', entregue: 'Entregue' } as Record<string, string>)[cliente.delivery_status ?? 'recebido'] ?? 'Ensaio recebido'}</strong>
           </section>
         )}
-\n        {incluiVideo && !expirado && (
+
+        {incluiVideo && !expirado && (
           <section className="form">
             <h2 className="serif" style={{ fontSize: 32, margin: 0 }}>Seu vídeo</h2>
             <p className="muted" style={{ margin: 0 }}>Seu vídeo está hospedado em uma plataforma externa.</p>
