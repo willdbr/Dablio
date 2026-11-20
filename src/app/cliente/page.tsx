@@ -11,7 +11,8 @@ import { enviarDepoimento } from './actions';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Minhas fotos | Dáblio', robots: { index: false, follow: false } };
 
-export default async function AreaCliente({ searchParams }: { searchParams?: { depoimento?: string; favorito?: string } }) {
+export default async function AreaCliente({ searchParams }: { searchParams?: Promise<{ depoimento?: string; favorito?: string }> }) {
+  const query = await searchParams;
   const supabase = createClient();
   const {
     data: { user },
@@ -147,25 +148,25 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
           </section>
         )}
 
-        {searchParams?.depoimento === 'enviado' && (
+        {query?.depoimento === 'enviado' && (
           <p className="credenciais" role="status">Depoimento enviado. Obrigado! Ele ficará aguardando sua aprovação antes de aparecer no site.</p>
         )}
-        {searchParams?.depoimento === 'autorizacao' && (
+        {query?.depoimento === 'autorizacao' && (
           <p className="error" role="alert">Para enviar o depoimento, é necessário marcar a autorização de publicação.</p>
         )}
-        {searchParams?.depoimento === 'erro' && (
+        {query?.depoimento === 'erro' && (
           <p className="error" role="alert">Não foi possível enviar seu depoimento agora. Tente novamente mais tarde.</p>
         )}
-        {searchParams?.favorito === 'adicionado' && (
+        {query?.favorito === 'adicionado' && (
           <p className="credenciais" role="status">Foto adicionada aos favoritos!</p>
         )}
-        {searchParams?.favorito === 'removido' && (
+        {query?.favorito === 'removido' && (
           <p className="muted" role="status">Foto removida dos favoritos.</p>
         )}
-        {searchParams?.favorito?.startsWith('erro') && (
+        {query?.favorito?.startsWith('erro') && (
           <p className="error" role="alert">Não foi possível salvar o favorito. Atualize a página e tente novamente. Se persistir, verificaremos as permissões do banco.</p>
         )}
-        {searchParams?.favorito === 'foto_nao_encontrada' && (
+        {query?.favorito === 'foto_nao_encontrada' && (
           <p className="error" role="alert">A foto selecionada não foi encontrada ou não está acessível.</p>
         )}
         {houveErroCarregamento && (
