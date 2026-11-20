@@ -54,6 +54,11 @@ export default async function Painel() {
           </p>
         </div>
 
+        <section className="admin-shortcuts">
+          <Link href="/admin/financeiro" className="admin-shortcut"><strong>Financeiro</strong><span className="muted">Contratos, pagamentos e saldos →</span></Link>
+          <Link href="/admin/agenda" className="admin-shortcut"><strong>Agenda de ensaios</strong><span className="muted">Datas, horários e locais →</span></Link>
+        </section>
+
         <section className="stack" style={{ gap: 16 }}>
           <h2 className="serif" style={{ fontSize: 30, margin: 0 }}>Visão geral</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 14 }}>
