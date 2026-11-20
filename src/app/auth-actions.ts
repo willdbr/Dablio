@@ -11,7 +11,7 @@ export async function loginCliente(_prev: LoginState, formData: FormData): Promi
   const senha = String(formData.get('senha') ?? '');
   if (!/^[a-z0-9]{6}$/.test(codigo) || !senha || senha.length > 128) return { error: 'Informe um código válido e a senha.' };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
     email: emailDoCliente(codigo),
     password: senha,
@@ -26,7 +26,7 @@ export async function loginAdmin(_prev: LoginState, formData: FormData): Promise
   const senha = String(formData.get('senha') ?? '');
   if (!email || email.length > 254 || !senha || senha.length > 128) return { error: 'Informe e-mail e senha válidos.' };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
   if (error || !data.user) return { error: 'E-mail ou senha incorretos.' };
 
@@ -59,7 +59,7 @@ export async function loginAdmin(_prev: LoginState, formData: FormData): Promise
 }
 
 export async function sair() {
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.auth.signOut();
   redirect('/');
 }
