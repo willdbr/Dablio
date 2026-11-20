@@ -179,3 +179,6 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .admin-shortcut { display: flex; flex-direction: column; gap: 6px; padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-soft); transition: border-color .2s, transform .2s; }
 .admin-shortcut:hover { border-color: var(--accent); transform: translateY(-2px); }
 .admin-shortcut strong { font-size: 18px; }
+
+.notification-item { display: flex; flex-direction: column; gap: 5px; padding: 14px 0; border-top: 1px solid var(--line); }
+.notification-item a { color: var(--accent); }
