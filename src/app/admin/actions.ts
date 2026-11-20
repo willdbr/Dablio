@@ -268,6 +268,7 @@ export async function atualizarValorContrato(formData: FormData) {
   if (error) throw new Error('Não foi possível salvar o valor do contrato.');
   revalidatePath('/admin/financeiro');
   revalidatePath('/admin');
+  redirect('/admin/financeiro?resultado=contrato');
 }
 
 export async function registrarPagamento(formData: FormData) {
@@ -285,6 +286,7 @@ export async function registrarPagamento(formData: FormData) {
   if (error) throw new Error('Não foi possível registrar o pagamento.');
   revalidatePath('/admin/financeiro');
   revalidatePath('/admin');
+  redirect('/admin/financeiro?resultado=pagamento');
 }
 
 export async function excluirPagamento(formData: FormData) {
@@ -295,6 +297,7 @@ export async function excluirPagamento(formData: FormData) {
   if (error) throw new Error('Não foi possível excluir o pagamento.');
   revalidatePath('/admin/financeiro');
   revalidatePath('/admin');
+  redirect('/admin/financeiro?resultado=excluido');
 }
 
 // FASE 3 — Agenda de ensaios
@@ -316,6 +319,7 @@ export async function criarAgendamento(formData: FormData) {
   if (error) throw new Error('Não foi possível criar o agendamento.');
   revalidatePath('/admin/agenda');
   revalidatePath('/cliente');
+  redirect('/admin/agenda?resultado=criado');
 }
 
 export async function atualizarAgendamento(formData: FormData) {
@@ -327,6 +331,7 @@ export async function atualizarAgendamento(formData: FormData) {
   if (error) throw new Error('Não foi possível atualizar o agendamento.');
   revalidatePath('/admin/agenda');
   revalidatePath('/cliente');
+  redirect('/admin/agenda?resultado=atualizado');
 }
 
 export async function excluirAgendamento(formData: FormData) {
@@ -337,4 +342,5 @@ export async function excluirAgendamento(formData: FormData) {
   if (error) throw new Error('Não foi possível excluir o agendamento.');
   revalidatePath('/admin/agenda');
   revalidatePath('/cliente');
+  redirect('/admin/agenda?resultado=excluido');
 }
