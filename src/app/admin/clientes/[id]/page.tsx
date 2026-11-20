@@ -145,6 +145,7 @@ export default async function PainelCliente({ params, searchParams }: { params: 
               {(linhas ?? []).map((l, i) => (
                 <figure key={l.id}>
                   <img src={assinadas?.[i]?.signedUrl ?? ''} alt="" loading="lazy" />
+                  {favoritosIds.has(l.id) && <span className="badge badge-ok">♥ Favorita do cliente</span>}
                   <form action={excluirFoto} className="actions">
                     <input type="hidden" name="id" value={l.id} />
                     <input type="hidden" name="path" value={l.path} />
