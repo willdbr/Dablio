@@ -170,3 +170,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   .finance-form .btn { width: 100%; }
   .nav { gap: 8px 18px; }
 }
+
+.client-appointment-section { padding: 22px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-soft); }
+.appointment-client { display: flex; flex-direction: column; gap: 6px; padding: 16px 0; border-top: 1px solid var(--line); }
+.appointment-client strong { color: var(--accent); font-size: 18px; }
