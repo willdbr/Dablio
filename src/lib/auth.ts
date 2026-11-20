@@ -23,7 +23,7 @@ export function emailDoCliente(codigo: string) {
 
 // Garante que quem acessa é administrador. Caso contrário, manda para o login.
 export async function exigirAdmin() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
