@@ -138,3 +138,56 @@ create policy "cliente consulta próprio depoimento" on public.testimonials
   );
 
 grant insert on public.testimonials to authenticated;
+
+
+-- 6. Status de produção/entrega visível na área do cliente
+alter table public.clients
+  add column if not exists delivery_status text not null default 'recebido';
+
+alter table public.clients drop constraint if exists clients_delivery_status_check;
+alter table public.clients add constraint clients_delivery_status_check
+  check (delivery_status in ('recebido', 'em_edicao', 'aguardando_aprovacao', 'finalizado', 'entregue'));
+
+-- 7. Favoritos escolhidos pelo cliente (sem alterar os arquivos originais)
+create table if not exists public.photo_favorites (
+  photo_id uuid not null references public.photos(id) on delete cascade,
+  client_id uuid not null references public.clients(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (photo_id, user_id)
+);
+
+alter table public.photo_favorites enable row level security;
+drop policy if exists "admin consulta favoritos" on public.photo_favorites;
+create policy "admin consulta favoritos" on public.photo_favorites
+  for select to authenticated using (public.is_admin());
+drop policy if exists "cliente consulta próprios favoritos" on public.photo_favorites;
+create policy "cliente consulta próprios favoritos" on public.photo_favorites
+  for select to authenticated using (
+    user_id = auth.uid() and exists (
+      select 1 from public.clients c
+      where c.id = photo_favorites.client_id and c.user_id = auth.uid() and c.expires_at > now()
+    )
+  );
+drop policy if exists "cliente marca próprias fotos favoritas" on public.photo_favorites;
+create policy "cliente marca próprias fotos favoritas" on public.photo_favorites
+  for insert to authenticated with check (
+    user_id = auth.uid() and exists (
+      select 1 from public.clients c
+      join public.photos p on p.client_id = c.id
+      where c.id = photo_favorites.client_id and c.user_id = auth.uid()
+        and c.expires_at > now() and p.id = photo_favorites.photo_id
+    )
+  );
+drop policy if exists "cliente remove próprios favoritos" on public.photo_favorites;
+create policy "cliente remove próprios favoritos" on public.photo_favorites
+  for delete to authenticated using (
+    user_id = auth.uid() and exists (
+      select 1 from public.clients c
+      where c.id = photo_favorites.client_id and c.user_id = auth.uid() and c.expires_at > now()
+    )
+  );
+
+grant select on public.photo_favorites to authenticated;
+grant insert, delete on public.photo_favorites to authenticated;
+grant select on public.photo_favorites to service_role;
