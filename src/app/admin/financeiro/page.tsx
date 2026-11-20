@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Financeiro | Dáblio', robots: { index: false } };
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const hojeBrasil = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-export default async function Financeiro() {
+export default async function Financeiro({ searchParams }: { searchParams?: { resultado?: string } }) {
  const {supabase}=await exigirAdmin();
  const [{data:clientes},{data:contratos},{data:pagamentos}]=await Promise.all([
   supabase.from('clients').select('id,name').order('name'),
@@ -21,6 +21,7 @@ export default async function Financeiro() {
  const aberto=lista.reduce((s,c)=>s+Math.max(0,(valores.get(c.id)??0)-pagos.filter(p=>p.client_id===c.id).reduce((a,p)=>a+Number(p.amount),0)),0);
  return <><AdminNav/><main className="page stack">
  <div><Link href="/admin" className="muted">← Voltar ao painel</Link><h1 style={{marginTop:16}}>Financeiro</h1><p className="muted" style={{margin:0}}>Controle manual dos contratos e pagamentos recebidos fora do site.</p></div>
+ {searchParams?.resultado && <p className="notice" role="status">{({contrato:'Valor do contrato salvo.',pagamento:'Pagamento registrado com sucesso.',excluido:'Pagamento excluído.'} as Record<string,string>)[searchParams.resultado] ?? 'Alteração concluída.'}</p>}
  <section className="summary-grid"><article className="summary-card"><span className="muted">Valor contratado</span><strong>{brl(contratado)}</strong></article><article className="summary-card"><span className="muted">Total recebido</span><strong>{brl(recebido)}</strong></article><article className="summary-card"><span className="muted">Saldo em aberto</span><strong>{brl(aberto)}</strong></article></section>
  <section className="stack" style={{gap:20}}><div><h2 className="serif" style={{fontSize:30,margin:0}}>Clientes e pagamentos</h2><p className="muted" style={{margin:0}}>Defina o valor do contrato e registre cada parcela.</p></div>
  {lista.map(c=>{const hist=pagos.filter(p=>p.client_id===c.id);const total=hist.reduce((s,p)=>s+Number(p.amount),0);const contrato=valores.get(c.id)??0;const saldo=Math.max(0,contrato-total);return <article className="form finance-client" key={c.id}>
