@@ -7,7 +7,9 @@ export default function AdminNav() {
     <header className="topbar">
       <Logo />
       <nav className="nav" aria-label="Painel">
-        <Link href="/admin">Clientes e mensagens</Link>
+        <Link href="/admin">Painel</Link>
+        <Link href="/admin/financeiro">Financeiro</Link>
+        <Link href="/admin/agenda">Agenda</Link>
         <Link href="/admin/portfolio">Portfólio do site</Link>
         <Link href="/admin/video-demo">Vídeo demonstrativo</Link>
         <Link href="/admin/conteudo">Conteúdo do site</Link>
