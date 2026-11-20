@@ -12,13 +12,15 @@ import { atualizarDadosMidiaCliente, atualizarStatusEntrega, excluirCliente, exc
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Cliente | Painel', robots: { index: false } };
 
-export default async function PainelCliente({ params, searchParams }: { params: { id: string }; searchParams?: { midia?: string } }) {
+export default async function PainelCliente({ params, searchParams }: { params: Promise<{ id: string }>; searchParams?: Promise<{ midia?: string }> }) {
+  const { id } = await params;
+  const query = await searchParams;
   const { supabase } = await exigirAdmin();
 
   const { data: cliente } = await supabase
     .from('clients')
     .select('id, name, code, expires_at, service, video_url, delivery_status')
-    .eq('id', params.id)
+    .eq('id', id)
     .maybeSingle();
   if (!cliente) notFound();
 
@@ -62,7 +64,7 @@ export default async function PainelCliente({ params, searchParams }: { params: 
         <section className="form">
           <h2 className="serif" style={{ fontSize: 28, margin: 0 }}>Serviço e vídeo do cliente</h2>
           <p className="muted" style={{ margin: 0 }}>O link só aparece na área do cliente quando o serviço inclui filmagem.</p>
-          {searchParams?.midia === 'salvo' && (
+          {query?.midia === 'salvo' && (
             <p role="status" style={{ margin: 0, padding: "12px 16px", borderRadius: 8, border: "1px solid #86b98d", background: "#edf8ef", color: "#205b2b" }}>
               Dados do serviço e link do vídeo salvos com sucesso!
             </p>
