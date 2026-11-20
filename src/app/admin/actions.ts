@@ -99,27 +99,40 @@ export async function redefinirSenha(
 export async function excluirCliente(formData: FormData) {
   const { supabase } = await exigirAdmin();
   const id = String(formData.get('id') ?? '');
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) redirect('/admin');
 
-  const { data: cliente } = await supabase
+  const { data: cliente, error: erroConsulta } = await supabase
     .from('clients')
     .select('user_id')
     .eq('id', id)
     .maybeSingle();
+  if (erroConsulta) throw new Error('Não foi possível consultar o cliente antes da exclusão.');
   if (!cliente) redirect('/admin');
 
   const admin = createAdminClient();
 
-  // Apaga os arquivos da pasta do cliente
-  const { data: arquivos } = await admin.storage.from('galerias').list(id, { limit: 1000 });
-  if (arquivos && arquivos.length > 0) {
-    await admin.storage.from('galerias').remove(arquivos.map((a) => `${id}/${a.name}`));
+  // Lista todos os arquivos da pasta antes de removê-los em lotes.
+  const caminhos: string[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data: arquivos, error } = await admin.storage.from('galerias').list(id, { limit: 1000, offset });
+    if (error) throw new Error('Não foi possível listar as fotos do cliente. A exclusão foi interrompida.');
+    const itens = arquivos ?? [];
+    caminhos.push(...itens.filter((a) => a.id && a.name).map((a) => `${id}/${a.name}`));
+    if (itens.length < 1000) break;
   }
 
-  // Apagar o usuário remove também o cadastro e as fotos (cascata)
+  for (let i = 0; i < caminhos.length; i += 100) {
+    const { error } = await admin.storage.from('galerias').remove(caminhos.slice(i, i + 100));
+    if (error) throw new Error('Não foi possível remover todas as fotos. O cadastro foi mantido para evitar perda de referência.');
+  }
+
+  // O usuário só é removido depois da confirmação da remoção dos arquivos.
   if (cliente.user_id) {
-    await admin.auth.admin.deleteUser(cliente.user_id);
+    const { error } = await admin.auth.admin.deleteUser(cliente.user_id);
+    if (error) throw new Error('As fotos foram removidas, mas não foi possível excluir o acesso do cliente.');
   } else {
-    await admin.from('clients').delete().eq('id', id);
+    const { error } = await admin.from('clients').delete().eq('id', id);
+    if (error) throw new Error('Não foi possível excluir o cadastro do cliente.');
   }
 
   revalidatePath('/admin');
@@ -129,11 +142,20 @@ export async function excluirCliente(formData: FormData) {
 export async function excluirFoto(formData: FormData) {
   const { supabase } = await exigirAdmin();
   const id = String(formData.get('id') ?? '');
-  const path = String(formData.get('path') ?? '');
   const clienteId = String(formData.get('clienteId') ?? '');
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clienteId)) return;
 
-  await supabase.storage.from('galerias').remove([path]);
-  await supabase.from('photos').delete().eq('id', id);
+  // O caminho é obtido do banco, nunca confiado ao campo oculto do formulário.
+  const { data: foto, error: erroConsulta } = await supabase.from('photos')
+    .select('path').eq('id', id).eq('client_id', clienteId).maybeSingle();
+  if (erroConsulta) throw new Error('Não foi possível localizar a foto.');
+  if (!foto?.path || !foto.path.startsWith(clienteId + '/')) return;
+
+  const { error: erroStorage } = await supabase.storage.from('galerias').remove([foto.path]);
+  if (erroStorage) throw new Error('Não foi possível remover o arquivo da galeria.');
+  const { error } = await supabase.from('photos').delete().eq('id', id).eq('client_id', clienteId);
+  if (error) throw new Error('O arquivo foi removido, mas não foi possível atualizar o cadastro da foto.');
 
   revalidatePath(`/admin/clientes/${clienteId}`);
 }
