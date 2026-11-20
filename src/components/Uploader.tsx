@@ -6,6 +6,10 @@ import { createBrowser } from '@/lib/supabase/browser';
 import { atualizarPortfolio } from '@/app/admin/actions';
 
 // Envia somente fotos direto do navegador para o Supabase Storage.
+const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
+const LIMITE_ORIGINAL = 30 * 1024 * 1024;
+const LIMITE_FINAL = 15 * 1024 * 1024;
+
 async function comprimirImagem(original: File): Promise<File> {
   if (!original.type.startsWith('image/') || ['image/gif', 'image/svg+xml'].includes(original.type)) return original;
   try {
@@ -48,6 +52,10 @@ export default function Uploader({
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
     const arquivos = Array.from(input.current?.files ?? []);
+    if (bucket === 'galerias' && (!pasta || !clienteId)) {
+      setStatus('Não foi possível identificar o cliente desta galeria.');
+      return;
+    }
     if (arquivos.length === 0) {
       setStatus('Escolha ao menos um arquivo.');
       return;
@@ -60,12 +68,20 @@ export default function Uploader({
 
     for (let i = 0; i < arquivos.length; i++) {
       const original = arquivos[i];
-      if (!original.type.startsWith('image/')) {
-        erros.push(original.name + ': envie somente imagens.');
+      if (!TIPOS_PERMITIDOS.includes(original.type)) {
+        erros.push(original.name + ': formato não permitido. Use JPG, PNG ou WebP.');
+        continue;
+      }
+      if (original.size > LIMITE_ORIGINAL) {
+        erros.push(original.name + ': arquivo original acima de 30 MB.');
         continue;
       }
       setStatus('Preparando ' + (i + 1) + ' de ' + arquivos.length + '…');
       const arquivo = await comprimirImagem(original);
+      if (!TIPOS_PERMITIDOS.includes(arquivo.type) || arquivo.size > LIMITE_FINAL) {
+        erros.push(original.name + ': após a preparação, o arquivo precisa ser JPG, PNG ou WebP e ter no máximo 15 MB.');
+        continue;
+      }
 
       const nomeSeguro = arquivo.name
         .normalize('NFD')
@@ -86,7 +102,8 @@ export default function Uploader({
           .from('photos')
           .insert({ client_id: clienteId, path: caminho });
         if (erroRegistro) {
-          erros.push(`${arquivo.name}: ${erroRegistro.message}`);
+          await supabase.storage.from(bucket).remove([caminho]);
+          erros.push(`${arquivo.name}: não foi possível registrar a foto na galeria (${erroRegistro.message}). O arquivo enviado foi removido.`);
           continue;
         }
       }
@@ -114,7 +131,7 @@ export default function Uploader({
   return (
     <form onSubmit={enviar} className="upload">
       <label htmlFor={`up-${bucket}`}>{rotulo}</label>
-      <input id={`up-${bucket}`} ref={input} type="file" accept="image/*" multiple />
+      <input id={`up-${bucket}`} ref={input} type="file" accept="image/jpeg,image/png,image/webp" multiple />
       <button type="submit" className="btn" disabled={ocupado}>
         {ocupado ? 'Enviando…' : 'Enviar'}
       </button>
