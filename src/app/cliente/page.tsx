@@ -20,7 +20,7 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
 
   const { data: cliente } = await supabase
     .from('clients')
-    .select('id, name, expires_at, service, video_url')
+    .select('id, name, expires_at, service, video_url, delivery_status')
     .eq('user_id', user.id)
     .maybeSingle();
   if (!cliente) redirect('/cliente/login');
@@ -32,7 +32,7 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
     .select('id, visible').eq('client_id', cliente.id)
     .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
-  let fotos: { id: string; ver: string; baixar: string }[] = [];
+  let fotos: { id: string; ver: string; baixar: string; favorita: boolean }[] = [];
   let houveErroCarregamento = false;
 
   if (!expirado) {
@@ -63,7 +63,7 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
           return {
             id: l.id as string,
             ver: ver.data?.[i]?.signedUrl ?? '',
-            baixar: baixar.data?.[i]?.signedUrl ?? '',
+            baixar: baixar.data?.[i]?.signedUrl ?? '',\n            favorita: favoritosSet.has(l.id),
           };
         });
 
@@ -103,7 +103,15 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
           </p>
         )}
 
-        {incluiVideo && !expirado && (
+
+        {!expirado && (
+          <section className="form" style={{ padding: 20, border: '1px solid var(--line)', borderRadius: 8 }}>
+            <h2 className="serif" style={{ fontSize: 28, margin: 0 }}>Acompanhamento do seu trabalho</h2>
+            <p className="muted" style={{ margin: 0 }}>Você pode acompanhar o andamento do seu ensaio por aqui.</p>
+            <strong style={{ color: 'var(--accent)' }}>{({ recebido: 'Ensaio recebido', em_edicao: 'Em edição', aguardando_aprovacao: 'Aguardando sua aprovação', finalizado: 'Finalizado', entregue: 'Entregue' } as Record<string, string>)[cliente.delivery_status ?? 'recebido'] ?? 'Ensaio recebido'}</strong>
+          </section>
+        )}
+\n        {incluiVideo && !expirado && (
           <section className="form">
             <h2 className="serif" style={{ fontSize: 32, margin: 0 }}>Seu vídeo</h2>
             <p className="muted" style={{ margin: 0 }}>Seu vídeo está hospedado em uma plataforma externa.</p>
@@ -169,7 +177,7 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
         ) : (
           <div className="stack" style={{ gap: 16 }}>
             <DownloadAllButton urls={fotos.map((f) => f.baixar).filter(Boolean)} />
-            <LightboxGallery fotos={fotos.filter((f) => f.ver).map((f, i) => ({ src: f.ver, alt: `Foto ${i + 1}`, download: f.baixar }))} />
+            <LightboxGallery permitirFavoritos fotos={fotos.filter((f) => f.ver).map((f, i) => ({ id: f.id, src: f.ver, alt: `Foto ${i + 1}`, download: f.baixar, favorita: f.favorita }))} />
           </div>
         )}
       </main>
