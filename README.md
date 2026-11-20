@@ -26,6 +26,10 @@ O projeto utiliza **Next.js 14**, **React 18** e **Supabase**. A publicação é
 - Atualize o status para agendado, concluído ou cancelado.
 - Clientes com acesso válido visualizam os próximos compromissos na área reservada.
 
+### Notificações administrativas
+- Centraliza contatos recebidos, depoimentos pendentes, entregas em andamento e ensaios dos próximos sete dias.
+- A central fica disponível em `/admin/notificacoes` e também no menu do painel.
+
 ### Área do cliente
 - Login com código e senha fornecidos pelo administrador.
 - Galeria privada com acesso somente às próprias fotos.
