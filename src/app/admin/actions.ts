@@ -264,7 +264,7 @@ export async function atualizarValorContrato(formData: FormData) {
   const raw = String(formData.get('contract_value') ?? '').replace(',', '.');
   const value = Number(raw);
   if (!clientId || !Number.isFinite(value) || value < 0 || value > 100000000) return;
-  const { error } = await supabase.from('clients').update({ contract_value: value }).eq('id', clientId);
+  const { error } = await supabase.from('client_contracts').upsert({ client_id: clientId, contract_value: value }, { onConflict: 'client_id' });
   if (error) throw new Error('Não foi possível salvar o valor do contrato.');
   revalidatePath('/admin/financeiro');
   revalidatePath('/admin');
