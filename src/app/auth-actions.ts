@@ -9,7 +9,7 @@ export type LoginState = { error?: string } | undefined;
 export async function loginCliente(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const codigo = normalizarCodigo(String(formData.get('codigo') ?? ''));
   const senha = String(formData.get('senha') ?? '');
-  if (!codigo || !senha) return { error: 'Informe o código e a senha.' };
+  if (!/^[a-z0-9]{6}$/.test(codigo) || !senha || senha.length > 128) return { error: 'Informe um código válido e a senha.' };
 
   const supabase = createClient();
   const { error } = await supabase.auth.signInWithPassword({
@@ -24,7 +24,7 @@ export async function loginCliente(_prev: LoginState, formData: FormData): Promi
 export async function loginAdmin(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const email = String(formData.get('email') ?? '').trim();
   const senha = String(formData.get('senha') ?? '');
-  if (!email || !senha) return { error: 'Informe e-mail e senha.' };
+  if (!email || email.length > 254 || !senha || senha.length > 128) return { error: 'Informe e-mail e senha válidos.' };
 
   const supabase = createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
