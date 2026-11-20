@@ -255,3 +255,86 @@ export async function atualizarStatusEntrega(formData: FormData) {
   revalidatePath('/admin');
   revalidatePath('/cliente');
 }
+
+
+// FASE 2 — Financeiro manual
+export async function atualizarValorContrato(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const clientId = String(formData.get('client_id') ?? '');
+  const raw = String(formData.get('contract_value') ?? '').replace(',', '.');
+  const value = Number(raw);
+  if (!clientId || !Number.isFinite(value) || value < 0 || value > 100000000) return;
+  const { error } = await supabase.from('clients').update({ contract_value: value }).eq('id', clientId);
+  if (error) throw new Error('Não foi possível salvar o valor do contrato.');
+  revalidatePath('/admin/financeiro');
+  revalidatePath('/admin');
+}
+
+export async function registrarPagamento(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const clientId = String(formData.get('client_id') ?? '');
+  const amount = Number(String(formData.get('amount') ?? '').replace(',', '.'));
+  const method = String(formData.get('payment_method') ?? '');
+  const paidAt = String(formData.get('paid_at') ?? '');
+  const notes = String(formData.get('notes') ?? '').trim().slice(0, 250);
+  const methods = ['Pix', 'Dinheiro', 'Cartão', 'Transferência', 'Outro'];
+  if (!clientId || !Number.isFinite(amount) || amount <= 0 || amount > 100000000 || !methods.includes(method) || !/^\\d{4}-\\d{2}-\\d{2}$/.test(paidAt)) return;
+  const { error } = await supabase.from('finance_payments').insert({
+    client_id: clientId, amount, payment_method: method, paid_at: paidAt, notes: notes || null,
+  });
+  if (error) throw new Error('Não foi possível registrar o pagamento.');
+  revalidatePath('/admin/financeiro');
+  revalidatePath('/admin');
+}
+
+export async function excluirPagamento(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+  const { error } = await supabase.from('finance_payments').delete().eq('id', id);
+  if (error) throw new Error('Não foi possível excluir o pagamento.');
+  revalidatePath('/admin/financeiro');
+  revalidatePath('/admin');
+}
+
+// FASE 3 — Agenda de ensaios
+export async function criarAgendamento(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const clientId = String(formData.get('client_id') ?? '');
+  const title = String(formData.get('title') ?? '').trim().slice(0, 100);
+  const startsRaw = String(formData.get('starts_at') ?? '');
+  const location = String(formData.get('location') ?? '').trim().slice(0, 250);
+  const service = String(formData.get('service') ?? '');
+  const notes = String(formData.get('notes') ?? '').trim().slice(0, 1000);
+  const validServices = ['Fotografia', 'Filmagem', 'Fotografia e filmagem', 'Reunião'];
+  if (!clientId || !title || !location || !validServices.includes(service) || !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(startsRaw)) return;
+  const startsAt = new Date(startsRaw + '-03:00');
+  if (Number.isNaN(startsAt.getTime())) return;
+  const { error } = await supabase.from('appointments').insert({
+    client_id: clientId, title, starts_at: startsAt.toISOString(), location, service, notes: notes || null,
+  });
+  if (error) throw new Error('Não foi possível criar o agendamento.');
+  revalidatePath('/admin/agenda');
+  revalidatePath('/cliente');
+}
+
+export async function atualizarAgendamento(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const id = String(formData.get('id') ?? '');
+  const status = String(formData.get('status') ?? '');
+  if (!id || !['agendado', 'concluido', 'cancelado'].includes(status)) return;
+  const { error } = await supabase.from('appointments').update({ status }).eq('id', id);
+  if (error) throw new Error('Não foi possível atualizar o agendamento.');
+  revalidatePath('/admin/agenda');
+  revalidatePath('/cliente');
+}
+
+export async function excluirAgendamento(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+  const { error } = await supabase.from('appointments').delete().eq('id', id);
+  if (error) throw new Error('Não foi possível excluir o agendamento.');
+  revalidatePath('/admin/agenda');
+  revalidatePath('/cliente');
+}
