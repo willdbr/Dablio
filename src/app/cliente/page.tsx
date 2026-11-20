@@ -32,6 +32,12 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
     .select('id, visible').eq('client_id', cliente.id)
     .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
+  const { data: proximosEnsaios } = await supabase.from('appointments')
+    .select('id, title, starts_at, location, service, notes')
+    .eq('client_id', cliente.id).eq('status', 'agendado')
+    .gte('starts_at', new Date().toISOString())
+    .order('starts_at', { ascending: true }).limit(5);
+
   let fotos: { id: string; ver: string; baixar: string; favorita: boolean }[] = [];
   let houveErroCarregamento = false;
 
@@ -112,6 +118,22 @@ export default async function AreaCliente({ searchParams }: { searchParams?: { d
             <h2 className="serif" style={{ fontSize: 28, margin: 0 }}>Acompanhamento do seu trabalho</h2>
             <p className="muted" style={{ margin: 0 }}>Você pode acompanhar o andamento do seu ensaio por aqui.</p>
             <strong style={{ color: 'var(--accent)' }}>{({ recebido: 'Ensaio recebido', em_edicao: 'Em edição', aguardando_aprovacao: 'Aguardando sua aprovação', finalizado: 'Finalizado', entregue: 'Entregue' } as Record<string, string>)[cliente.delivery_status ?? 'recebido'] ?? 'Ensaio recebido'}</strong>
+          </section>
+        )}
+
+        {!expirado && (proximosEnsaios ?? []).length > 0 && (
+          <section className="form client-appointment-section">
+            <h2 className="serif" style={{ fontSize: 30, margin: 0 }}>Seu próximo compromisso</h2>
+            <p className="muted" style={{ margin: 0 }}>Confira os detalhes do seu ensaio agendado.</p>
+            {(proximosEnsaios ?? []).map((ensaio) => (
+              <article key={ensaio.id} className="appointment-client">
+                <strong>{ensaio.title}</strong>
+                <span>{new Date(ensaio.starts_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'full', timeStyle: 'short' })}</span>
+                <span><b>Local:</b> {ensaio.location}</span>
+                <span><b>Serviço:</b> {ensaio.service}</span>
+                {ensaio.notes && <p className="muted" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{ensaio.notes}</p>}
+              </article>
+            ))}
           </section>
         )}
 
