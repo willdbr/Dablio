@@ -21,7 +21,7 @@ export async function enviarMensagem(_prev: ContatoState, formData: FormData): P
     return { error: 'Algum campo está muito longo.' };
   }
 
-  const cabecalhos = headers();
+  const cabecalhos = await headers();
   const encaminhado = cabecalhos.get('x-forwarded-for');
   const ipsEncaminhados = encaminhado ? encaminhado.split(',') : [];
   const ip = (cabecalhos.get('x-real-ip') ?? ipsEncaminhados[ipsEncaminhados.length - 1]?.trim() ?? 'unknown').slice(0, 100);
